@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido</title>
+</head>
+
+<body>
+    <main
+        style="padding:1rem 0;border-top:1px solid #e5e5e5;color:#141823;font-size:17px;font-family:Arial, Helvetica, sans-serif">
+        <span>
+            <b style="color:#000;">Bienvenido</b> {{nombre}}
+        </span>
+        <article style="padding:5px 0; margin: 5px 0">
+            <span style="padding:1.5rem 0;  text-align: justify;color:#000;">Usted acaba de
+                crear una nueva cuenta en nuestra plataforma CIPIL (Central de Información Anti Pirateria y Lavado de
+                Activos), nuestro objetivo es facilitar la vida de los contratistas de transporte de carga administrando
+                toda su información y facilitando que sus hojas de vida lleguen a las empresas de transporte de forma
+                fácil y automática; permitiendo que nunca mas tenga que enviar un documento a sus
+                clientes.
+            </span>
+            <br><br>
+            <span style="padding:1.5rem 0;color:#000;">Para terminar el proceso, deberá activar su
+                cuenta, dando click en en siguiente boton o en el enlace que se encuentra debajo:
+            </span>
+        </article>
+        <br>
+        <a href="{{ token}}"
+            style="width:200px;padding:10px 15px;background:#FFC928;color:#000;text-decoration:none;font-weight:600">
+            Activar cuenta
+        </a>
+        <br>
+        <br>
+        <br>
+        <a href=`{{ token}}`
+            style="color:#000;text-decoration:none;"
+        >{{ token}}</a>
+        <br>
+        <article style="padding-top:40px">
+            <span style="margin:4rem 0;color:#141823">Muchas gracias por su
+                información.</span>
+        </article>
+        <article style="padding-top:40px">
+            <span style="margin:4rem 0;color:#141823">
+                Cordialmente,
+            </span>
+            <br><br>
+            <span style="margin:4rem 0;color:#141823">
+                EQUIPO DE VINCULACION <br>Central de Documentos CIPIL
+            </span>
+            <hr style="border-bottom:1px solid #141823;">
+            <span style="color:#141823; font-weight: bold; text-align: justify;">
+                Cuando el usuario da click en el link del
+                correo de "Activar Cuenta" deberá direccionarlo a la plataforma www.cipil.com.co y cambiar el estado de
+                la cuenta de "Pendiente Activación" a "Activa" mostrando una pantalla de "Usted ha activado su cuenta
+                Exitosamente" y enviando un nuevo correo con el mensaje de activación e incluyendo las credenciales de
+                la cuenta creada.
+            </span>
+        </article>
+    </main>
+</body>
+
+</html>
