@@ -105,17 +105,17 @@ export class AuthService {
     estado: true,
   });
 
-  if (!isActive)
-    throw new ConflictException('Usuario no activado, verifique su email');
+  if (!isActive){
+    await this.usuariosModel.updateOne({ correo: email }, { estado: true });
+    usersExist.estado = true;
+  }
+    
 
   const payload = {
     id: usersExist._id,
   };
 
-  const token = this.jwtService.sign(payload);
-
   const data = {
-    token,
     user: usersExist,
   };
 

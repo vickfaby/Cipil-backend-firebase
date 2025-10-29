@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { 
   ApiTags, 
@@ -20,7 +20,6 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 
 @ApiTags('auth')
 @Controller('auth')
-@UseGuards(FirebaseAuthGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -72,6 +71,7 @@ export class AuthController {
   }
 
   @Post('login')
+@UseGuards(FirebaseAuthGuard)
   @ApiOperation({ 
     summary: 'Iniciar sesión',
     description: 'Permite a un usuario autenticarse en el sistema usando email y contraseña'
@@ -121,8 +121,13 @@ export class AuthController {
     description: 'Datos de entrada inválidos' 
   })
   async handleLogin(@Req() req: Request) {
-    const claims = (req as any).user;
+    const claims = (req as any).user; 
+    Logger.log( {claims: claims});
+    const mailIsValid = claims.email_verified;
+    if (!mailIsValid)
+      throw new UnauthorizedException('Email no verificado por favor verifique su email');
     const response = await this.authService.loginFirebase(claims.email);
+    Logger.log( {response});
     return response;
   }
 
@@ -132,6 +137,7 @@ export class AuthController {
   // }
 
   @Post('active')
+  @UseGuards(FirebaseAuthGuard)
   @ApiOperation({ 
     summary: 'Activar usuario',
     description: 'Permite activar o desactivar un usuario en el sistema'
