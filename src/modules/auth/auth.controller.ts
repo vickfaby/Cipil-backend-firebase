@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -13,10 +14,13 @@ import { RegisterAuthDto } from './dto/register-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { ActiveAuthDto } from './dto/active-auth.dto';
 import { ChangePasswordAuthDto } from './dto/change-pass-auth.dto';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { FirebaseService } from 'src/firebase/firebase.service';
 //import { CheckAuthDto } from './dto/check-auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
+@UseGuards(FirebaseAuthGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -116,8 +120,10 @@ export class AuthController {
   @ApiBadRequestResponse({ 
     description: 'Datos de entrada inválidos' 
   })
-  handleLogin(@Body() loginDto: LoginAuthDto) {
-    return this.authService.loginFirebase(loginDto.correo); 
+  async handleLogin(@Req() req: Request) {
+    const claims = (req as any).user;
+    const response = await this.authService.loginFirebase(claims.email);
+    return response;
   }
 
   // @Get('refresh')

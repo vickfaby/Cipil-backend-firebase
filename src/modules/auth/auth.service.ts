@@ -91,25 +91,35 @@ export class AuthService {
     return data;
   }
   public async loginFirebase(email: string) {
-    const user = await this.usuariosModel.findOne({ correo: email });
-    if (!user)
-      throw new BadRequestException(`Usuario no existe en la base de datos`);
+    const usersExist = await this.usuariosModel
+    .findOne({
+      correo: email,
+    })
+    .populate('roles_id');
+  if (!usersExist)
+    throw new BadRequestException(`Usuario no existe en la base de datos`);
 
-    if (!user.estado)
-      throw new ConflictException('Usuario no activado, verifique su email');
 
-    const payload = {
-      id: user._id,
-    };
+  const isActive = await this.usuariosModel.findOne({
+    correo: email,
+    estado: true,
+  });
 
-    const token = this.jwtService.sign(payload);
+  if (!isActive)
+    throw new ConflictException('Usuario no activado, verifique su email');
 
-    const data = {
-      token,
-      user: user.toObject(),
-    };
+  const payload = {
+    id: usersExist._id,
+  };
 
-    return data;
+  const token = this.jwtService.sign(payload);
+
+  const data = {
+    token,
+    user: usersExist,
+  };
+
+  return data;
   }
 
   // public async checkAuthStatus(checkAuthDto: CheckAuthDto) {

@@ -59,7 +59,8 @@ async function bootstrap() {
       'JWT-auth',
     )
     .addServer('http://localhost:3000', 'Servidor de Desarrollo')
-    .addServer('https://api.cipil.com', 'Servidor de Producción')
+    .addServer('http://localhost:3002', 'Servidor de Desarrollo')
+    .addServer('https://api.cipilapp.com', 'Servidor de Producción')
     .addTag('auth', 'Autenticación y autorización')
     .addTag('usuarios', 'Gestión de usuarios')
     .addTag('roles', 'Gestión de roles y permisos')

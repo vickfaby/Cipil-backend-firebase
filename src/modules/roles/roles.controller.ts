@@ -29,7 +29,7 @@ import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 @ApiTags('roles')
 @ApiBearerAuth('JWT-auth')
 @Controller('roles')
-@UseGuards(FirebaseAuthGuard)
+///@UseGuards(FirebaseAuthGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

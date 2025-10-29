@@ -13,7 +13,9 @@ import * as admin from 'firebase-admin';
   cors: {
     origin: '*',
   },
+  namespace: '/api/v1/ws',
 })
+
 export class MessagesGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;

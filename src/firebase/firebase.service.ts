@@ -11,11 +11,21 @@ export class FirebaseService {
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
       const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-      const credential = projectId && clientEmail && privateKey
-        ? admin.credential.cert({ projectId, clientEmail, privateKey })
+      // Usa credenciales por variables de entorno si hay clave privada; si no, ADC
+      const credential = clientEmail && privateKey
+        ? admin.credential.cert({ projectId: projectId || undefined, clientEmail, privateKey })
         : admin.credential.applicationDefault();
 
-      admin.initializeApp({ credential });
+      // Proveer explícitamente projectId para Firestore (incluye caso ADC)
+      const appOptions: admin.AppOptions = { credential };
+      if (projectId) {
+        appOptions.projectId = projectId;
+        if (!process.env.GOOGLE_CLOUD_PROJECT) {
+          process.env.GOOGLE_CLOUD_PROJECT = projectId;
+        }
+      }
+
+      admin.initializeApp(appOptions);
     }
     this.firestore = admin.firestore();
     Logger.log('🔥 Firebase conectado');
