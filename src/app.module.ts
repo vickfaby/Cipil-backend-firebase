@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MessagesGateway } from './message/messages.gateway';
+import { EventsGateway } from './message/events.gateway';
 import { FirebaseService } from './firebase/firebase.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -127,7 +127,7 @@ import {
     AuditoriadocsvehiculoModule,
   ],
   controllers: [AppController, ProfileController],
-  providers: [AppService, MessagesGateway, FirebaseService],
+  providers: [AppService, EventsGateway, FirebaseService],
 })
 export class AppModule {}
 function mongoose_delete(schema: Schema, opts?: any): void {
