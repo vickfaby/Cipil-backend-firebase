@@ -6,8 +6,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Types } from 'mongoose';
 import type { ModelExt } from 'src/common/interfaces/interfaces';
-import fs = require('fs');
-import path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { CreateResumeDto } from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
@@ -23,8 +23,39 @@ import { CitiesService } from '../cities/cities.service';
 import { LogimpresionesService } from '../logimpresiones/logimpresiones.service';
 import { Auditoriadocsoperador } from '../auditoriadocsoperador/entities/auditoriadocsoperador.entity';
 
+type FirstResumeBasic = {
+  _id?: string;
+  pais?: number;
+  estado?: number;
+  ciudad?: number;
+  foto?: string;
+  tipodocumento?: { nombre_tipodocumento?: string };
+  numerodocumento?: number | string;
+  categoria_id?: { nombre_categoria?: string };
+  tipotercero_id?: unknown;
+  tipopersona?: { nombre_tipopersona?: string };
+  razonsocial?: string;
+  nombre?: string;
+  apellido?: string;
+  sexo?: { nombre_sexo?: string };
+  telefono?: string | number;
+  direccion?: string;
+  ubicacion?: string;
+  fecha_nacimiento?: string | number | Date;
+  calificacion?: string | number;
+};
+
 @Injectable()
 export class ResumeService {
+  private toNumber(value: unknown, fallback: number): number {
+    const n =
+      typeof value === 'number'
+        ? value
+        : typeof value === 'string'
+          ? Number(value)
+          : NaN;
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  }
   constructor(
     @InjectModel(Resume.name)
     private readonly resumeModel: ModelExt<Resume>,
@@ -48,15 +79,67 @@ export class ResumeService {
     }
   }
 
-  async findAll(pagination: any) {
+  findAll(pagination: { limit?: number | string; page?: number | string }) {
     //return this.resumeModel.find({}).select('-__v');
     return this.resumeModel.paginate({}, pagination);
   }
 
-  async findAllNotByUser(userId: string, pagination: any) {
+  async findAllNotByUser(
+    userId: string,
+    pagination: { limit?: number | string; page?: number | string },
+  ) {
     try {
       const filter = { user_id: { $ne: userId } };
-      return this.resumeModel.paginate(filter, pagination);
+      const limit = this.toNumber(pagination?.limit, 10);
+      const page = this.toNumber(pagination?.page, 1);
+      const skip = (page - 1) * limit;
+
+      const [docs, totalDocs] = await Promise.all([
+        this.resumeModel
+          .find(filter)
+          .populate({
+            path: 'user_id',
+            select: 'nombre correo foto _id roles_id',
+            populate: {
+              path: 'roles_id',
+              select: 'nombre _id',
+            },
+          })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean()
+          .exec(),
+        this.resumeModel.countDocuments(filter),
+      ]);
+
+      const totalPages = Math.ceil(totalDocs / limit) || 1;
+
+      // Transformar docs: renombrar user_id a usuario_creador
+      const transformedDocs = (docs as Array<Record<string, unknown>>).map(
+        (doc) => {
+          const { user_id, ...rest } = doc as Record<string, unknown> & {
+            user_id?: unknown;
+          };
+          return {
+            ...rest,
+            usuario_creador: user_id ?? null,
+          } as Record<string, unknown>;
+        },
+      );
+
+      return {
+        docs: transformedDocs,
+        totalDocs,
+        limit,
+        totalPages,
+        page,
+        pagingCounter: skip + 1,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -65,10 +148,10 @@ export class ResumeService {
   async findAllNotByUserWithSearch(
     userId: string,
     text: string,
-    pagination: any,
+    pagination: { limit?: number | string; page?: number | string },
   ) {
     try {
-      const baseFilter: any = { user_id: { $ne: userId } };
+      const baseFilter: Record<string, unknown> = { user_id: { $ne: userId } };
       const trimmedText = (text || '').trim();
       const filter = trimmedText
         ? {
@@ -80,7 +163,56 @@ export class ResumeService {
           }
         : baseFilter;
 
-      return this.resumeModel.paginate(filter, pagination);
+      const limit = this.toNumber(pagination?.limit, 10);
+      const page = this.toNumber(pagination?.page, 1);
+      const skip = (page - 1) * limit;
+
+      const [docs, totalDocs] = await Promise.all([
+        this.resumeModel
+          .find(filter)
+          .populate({
+            path: 'user_id',
+            select: 'nombre correo foto _id roles_id',
+            populate: {
+              path: 'roles_id',
+              select: 'nombre _id',
+            },
+          })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean()
+          .exec(),
+        this.resumeModel.countDocuments(filter),
+      ]);
+
+      const totalPages = Math.ceil(totalDocs / limit) || 1;
+
+      // Transformar docs: renombrar user_id a usuario_creador
+      const transformedDocs = (docs as Array<Record<string, unknown>>).map(
+        (doc) => {
+          const { user_id, ...rest } = doc as Record<string, unknown> & {
+            user_id?: unknown;
+          };
+          return {
+            ...rest,
+            usuario_creador: user_id ?? null,
+          } as Record<string, unknown>;
+        },
+      );
+
+      return {
+        docs: transformedDocs,
+        totalDocs,
+        limit,
+        totalPages,
+        page,
+        pagingCounter: skip + 1,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -143,11 +275,11 @@ export class ResumeService {
       // Para cada documento, obtener la auditoría más reciente
       if (resume.documentos && resume.documentos.length > 0) {
         const documentosConAuditoria = await Promise.all(
-          resume.documentos.map(async (documento: any) => {
+          resume.documentos.map(async (documento: { _id?: unknown }) => {
             // Buscar la auditoría más reciente para este documento
             const auditoriaReciente = await this.auditoriaModel
               .findOne({
-                documento_cargado_id: documento._id,
+                documento_cargado_id: (documento as { _id?: unknown })?._id,
                 deleted: false,
               })
               .populate({
@@ -160,15 +292,18 @@ export class ResumeService {
               .lean();
 
             return {
-              ...documento,
+              ...(documento as Record<string, unknown>),
               ultima_auditoria: auditoriaReciente || null,
-            };
+            } as Record<string, unknown>;
           }),
         );
 
-        resume.documentos = documentosConAuditoria;
+        const resumeWithDocs = {
+          ...(resume as Record<string, unknown>),
+          documentos: documentosConAuditoria,
+        } as Record<string, unknown>;
+        return resumeWithDocs;
       }
-
       return resume;
     } catch (error) {
       this.handleExceptions(error);
@@ -183,11 +318,14 @@ export class ResumeService {
           '-foto -tipodocumento -categoria_id -tipotercero_id -tipopersona -sexo -telefono -direccion -pais -estado -ciudad -ubicacion -fecha_nacimiento -calificacion -progreso -entidades_seguridad_social -referencias -documentos -user_id -_id -status -__v',
         );
     } catch (error) {
-      return error;
+      this.handleExceptions(error);
     }
   }
 
-  async findByUsuarioEmpresa(usuarioEmpresaId: string, pagination: any) {
+  findByUsuarioEmpresa(
+    usuarioEmpresaId: string,
+    pagination: { limit?: number | string; page?: number | string },
+  ) {
     try {
       const filter = {
         usuario_empresa_id: {
@@ -201,10 +339,10 @@ export class ResumeService {
     }
   }
 
-  async findByUsuarioEmpresaWithSearch(
+  findByUsuarioEmpresaWithSearch(
     usuarioEmpresaId: string,
     text: string,
-    pagination: any,
+    pagination: { limit?: number | string; page?: number | string },
   ) {
     try {
       const baseFilter = {
@@ -230,7 +368,10 @@ export class ResumeService {
     }
   }
 
-  async findByUsuarioOperador(usuarioOperadorId: string, pagination: any) {
+  findByUsuarioOperador(
+    usuarioOperadorId: string,
+    pagination: { limit?: number | string; page?: number | string },
+  ) {
     try {
       const filter = {
         usuario_operador_id: {
@@ -253,17 +394,13 @@ export class ResumeService {
       if (!resume) {
         throw new BadRequestException('Resume not found');
       }
-      console.log('Documentos existentes:', resume.documentos?.map((d: any) => ({
-        _id: d._id?.toString() || d.toString(),
-      })));
-      console.log('Documentos en el DTO:', updateResumeDto.documentos?.map((d: any) => ({
-        _id: d._id,
-      })));
+      // Logs omitidos para evitar asignaciones inseguras
 
       // NUEVO: Procesar subdocumentos manteniendo IDs existentes
-      let respSeguro: any = resume.entidades_seguridad_social;
-      let respRferencia: any = resume.referencias;
-      let respDocumentoscargadosresume: any = resume.documentos;
+      const resumeRecord = resume as unknown as { [k: string]: unknown };
+      let respSeguro: unknown = resumeRecord?.entidades_seguridad_social;
+      let respRferencia: unknown = resumeRecord?.referencias;
+      let respDocumentoscargadosresume: unknown = resumeRecord?.documentos;
 
       // Procesar entidades de seguridad social
       if (updateResumeDto?.entidades_seguridad_social) {
@@ -295,7 +432,7 @@ export class ResumeService {
           );
       }
 
-      console.log('IDs de documentos después del procesamiento:', respDocumentoscargadosresume?.map((d: any) => d.toString()));
+      // Log posterior omitido
 
       // Actualizar campos simples
       const simpleFields = [
@@ -321,7 +458,7 @@ export class ResumeService {
         'status',
       ];
 
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         entidades_seguridad_social: respSeguro,
         referencias: respRferencia,
         documentos: respDocumentoscargadosresume,
@@ -362,11 +499,10 @@ export class ResumeService {
     }
   }
 
-  async remove(id: string) {
+  remove(id: string) {
     //TODO: ADD SEGSOCIAL, REFERENCIAS, DOCUMENTOS CARGADOS RESUMEN
     const _id = new Types.ObjectId(id);
-    const resp = this.resumeModel.delete({ _id });
-    return resp;
+    return this.resumeModel.delete({ _id });
   }
   async getResumeByDocument(typedoc: string, numdoc: number) {
     try {
@@ -400,7 +536,7 @@ export class ResumeService {
           '-progreso -entidades_seguridad_social -referencias -documentos -status -deleted -createdAt -updatedAt -__v',
         );
     } catch (error) {
-      return error;
+      this.handleExceptions(error);
     }
   }
 
@@ -410,69 +546,125 @@ export class ResumeService {
     typepdf,
     typehead,
   }: GetResumePDFDto) {
+    type EntidadItem = {
+      estado_afiliacion?: boolean;
+      fecha_afiliacion?: string;
+      grupoentidad_id?: string;
+      observaciones?: string;
+      tipoentidad_id?: string;
+    };
+    type ReferenciaItem = {
+      relacion?: string;
+      nombre_completo?: string;
+      telefonos?: string[];
+      pais_referencia?: string;
+      estado_referencia?: string;
+      ciudad_referencia?: string;
+      direccion?: string;
+    };
+    type DocumentoItem = {
+      documento?: string;
+      grupodocumento_id?: any;
+      documento_id?: any;
+      fecha_expedicion?: string | number | Date;
+      fecha_vencimiento?: string | number | Date;
+      categoria?: string;
+      codigo_referencia?: string;
+      entidad_emisora?: any;
+      estado_documento?: number;
+      observaciones?: string;
+    };
+
     const datresume = await this.getResumeByDocument(typedoc, Number(numdoc));
-    const resumeId = datresume[0]._id;
+    const firstResume = Array.isArray(datresume)
+      ? (datresume[0] as FirstResumeBasic)
+      : undefined;
+    if (!firstResume) {
+      throw new BadRequestException('No se encontró el resumen');
+    }
+    const resumeId = firstResume._id as string;
+
     const entsegsoc = await this.seguridadsocialService.findByResume(resumeId);
-    const dataentidades: any = entsegsoc || {};
-    const list = Object.values(dataentidades).map((item: any) => {
-      return {
-        estado_afiliacion: item.estado_afiliacion ? 'Activo' : 'Inactivo',
-        fecha_afiliacion: item.fecha_afiliacion,
-        grupoentidad_id: item.grupoentidad_id, //register split an splice
-        observaciones: item.observaciones,
-        tipoentidad_id: item.tipoentidad_id,
-      };
-    });
+    const dataentidadesObj = (entsegsoc ?? {}) as Record<string, EntidadItem>;
+    const list = Object.values(dataentidadesObj).map((item) => ({
+      estado_afiliacion: item.estado_afiliacion ? 'Activo' : 'Inactivo',
+      fecha_afiliacion: item.fecha_afiliacion ?? '',
+      grupoentidad_id: item.grupoentidad_id ?? '',
+      observaciones: item.observaciones ?? '',
+      tipoentidad_id: item.tipoentidad_id ?? '',
+    }));
+
     const refresume = await this.referenciasService.findByResume(resumeId);
-    const listref = (refresume ?? []).map((item: any) => {
+    const listref = (refresume ?? []).map((item) => {
+      const r = item as unknown as ReferenciaItem;
       return {
-        relacion: item.relacion,
-        nombre_completo: item.nombre_completo || '',
-        telefonos: item.telefonos || [],
-        pais_referencia: item.pais_referencia || '',
-        estado_referencia: item.estado_referencia || '',
-        ciudad_referencia: item.ciudad_referencia || '',
-        direccion: item.direccion || '',
+        relacion: r.relacion ?? '',
+        nombre_completo: r.nombre_completo ?? '',
+        telefonos: Array.isArray(r.telefonos) ? r.telefonos : [],
+        pais_referencia: r.pais_referencia ?? '',
+        estado_referencia: r.estado_referencia ?? '',
+        ciudad_referencia: r.ciudad_referencia ?? '',
+        direccion: r.direccion ?? '',
       };
     });
+
     const docresume =
       await this.documentoscargadosresumeService.findByResume(resumeId);
-    const listdocs = (docresume ?? []).map((item: any) => {
+    const listdocs = (docresume ?? []).map((item) => {
+      const d = item as unknown as DocumentoItem;
+      const fileName = typeof d.documento === 'string' ? d.documento : '';
       const foto = fs.readFileSync(
-        path.join(process.cwd(), `./public/uploads/${item.documento}`),
-        { encoding: 'base64' },
+        path.join(process.cwd(), `./public/uploads/${fileName}`),
+        {
+          encoding: 'base64',
+        },
       );
-      return {
+      const out: {
+        documento: string;
+        grupodocumento_id?: unknown;
+        documento_id?: unknown;
+        fecha_expedicion: string;
+        fecha_vencimiento: string;
+        categoria: string;
+        codigo_referencia: string;
+        entidad_emisora?: unknown;
+        estado_documento: number;
+        observaciones: string;
+      } = {
         documento: foto,
-        grupodocumento_id: item.grupodocumento_id,
-        documento_id: item.documento_id,
+        grupodocumento_id: d.grupodocumento_id as unknown,
+        documento_id: d.documento_id as unknown,
         fecha_expedicion: new Intl.DateTimeFormat('es-ES', {
           dateStyle: 'short',
           timeStyle: 'short',
-        }).format(new Date(item.fecha_expedicion)),
+        }).format(new Date(d.fecha_expedicion ?? 0)),
         fecha_vencimiento: new Intl.DateTimeFormat('es-ES', {
           dateStyle: 'short',
           timeStyle: 'short',
-        }).format(new Date(item.fecha_vencimiento)),
-        categoria: item.categoria,
-        codigo_referencia: item.codigo_referencia,
-        entidad_emisora: item.entidad_emisora,
-        estado_documento: item.estado_documento,
-        observaciones: item.observaciones,
+        }).format(new Date(d.fecha_vencimiento ?? 0)),
+        categoria: d.categoria ?? '',
+        codigo_referencia: d.codigo_referencia ?? '',
+        entidad_emisora: d.entidad_emisora as unknown,
+        estado_documento:
+          typeof d.estado_documento === 'number' ? d.estado_documento : 0,
+        observaciones: d.observaciones ?? '',
       };
+      return out;
     });
-    const paisbasicdata = (await this.coutriesModel.findById(datresume[0].pais)) || [];
-    const statebasicdata = (await this.statesModel.findBynumber(
-      datresume[0].estado,
-    )) || [];
-    const citybasicdata = (await this.citiesModel.findBynumber(
-      datresume[0].ciudad,
-    )) || [];
+
+    const paisbasicdata =
+      (await this.coutriesModel.findById(String(firstResume.pais ?? ''))) || [];
+    const statebasicdata =
+      (await this.statesModel.findBynumber(String(firstResume.estado ?? ''))) ||
+      [];
+    const citybasicdata =
+      (await this.citiesModel.findBynumber(String(firstResume.ciudad ?? ''))) ||
+      [];
     //TODO: Guardar fecha de impresión
     const fechaActual = Date.now();
     const dataFecha = {
       _id: new mongoose.Types.ObjectId().toString(),
-      resume_id: datresume[0]._id,
+      resume_id: String(firstResume._id ?? ''),
       fecha_impresion: new Date(fechaActual),
       __v: '0',
       resumevehiculo_id: '',
@@ -480,56 +672,64 @@ export class ResumeService {
     const fechaImp = await this.logImpresionesModel.create(dataFecha);
     const fechaImpDate = fechaImp?.fecha_impresion ?? new Date();
     //TODO: Mostrar fecha ultimo estudio de seguridad
-    let festudio = String;
+    let festudio: string | undefined;
     const estudioSeg = Object.values(listdocs)
-      .filter(
-        (item: any) =>
-          item.documento_id.nombre_documento ===
-          'ESTUDIO DE SEGURIDAD COMPLETO',
-      )
-      .map((r: any) => {
-        return {
-          fecha_vencimiento: r.fecha_vencimiento,
-        };
+      .filter((item) => {
+        const docId = (
+          item as { documento_id?: { nombre_documento?: string } | string }
+        )?.documento_id;
+        return (
+          docId !== undefined &&
+          typeof docId !== 'string' &&
+          (docId as { nombre_documento?: string })?.nombre_documento ===
+            'ESTUDIO DE SEGURIDAD COMPLETO'
+        );
+      })
+      .map((r) => {
+        const fv = (r as { fecha_vencimiento?: string })?.fecha_vencimiento;
+        return { fecha_vencimiento: fv };
       });
     if (estudioSeg !== undefined) {
       festudio = estudioSeg[0].fecha_vencimiento;
     }
     //show image
+    const fotoNombre = String(firstResume.foto ?? '');
     const fotouploads = fs.readFileSync(
-      path.join(process.cwd(), `./public/uploads/${datresume[0].foto}`),
-      { encoding: 'base64' },
+      path.join(process.cwd(), `./public/uploads/${fotoNombre}`),
+      {
+        encoding: 'base64',
+      },
     );
     const marcaagua = fs.readFileSync(
       path.join(process.cwd(), `./public/uploads/marca.png`),
       { encoding: 'base64' },
     );
-    const code = `${datresume[0]?._id}`;
+    const code = `${firstResume?._id}`;
     const codigoFinal = `HVC-` + code.slice(0, 8);
     //data resume for pdf;
     const data: any = {
       basic: {
         foto: fotouploads,
         codigo: codigoFinal,
-        tipodocumento: datresume[0].tipodocumento.nombre_tipodocumento,
-        numerodocumento: datresume[0].numerodocumento,
-        categoria_id: datresume[0].categoria_id.nombre_categoria,
-        tipotercero_id: datresume[0].tipotercero_id,
-        tipopersona: datresume[0].tipopersona.nombre_tipopersona,
-        razonsocial: datresume[0].razonsocial,
-        nombre: datresume[0].nombre,
-        apellido: datresume[0].apellido,
-        sexo: datresume[0].sexo.nombre_sexo,
-        telefono: datresume[0].telefono,
-        direccion: datresume[0].direccion,
-        pais: paisbasicdata[0].name,
-        estado: statebasicdata[0].name,
-        ciudad: citybasicdata[0].name,
-        ubicacion: datresume[0].ubicacion,
+        tipodocumento: firstResume?.tipodocumento?.nombre_tipodocumento,
+        numerodocumento: firstResume?.numerodocumento,
+        categoria_id: firstResume?.categoria_id?.nombre_categoria,
+        tipotercero_id: firstResume?.tipotercero_id,
+        tipopersona: firstResume?.tipopersona?.nombre_tipopersona,
+        razonsocial: firstResume?.razonsocial,
+        nombre: firstResume?.nombre,
+        apellido: firstResume?.apellido,
+        sexo: firstResume?.sexo?.nombre_sexo,
+        telefono: firstResume?.telefono,
+        direccion: firstResume?.direccion,
+        pais: paisbasicdata[0]?.name,
+        estado: statebasicdata[0]?.name,
+        ciudad: citybasicdata[0]?.name,
+        ubicacion: firstResume?.ubicacion,
         fecha_nacimiento: new Intl.DateTimeFormat('en-ES').format(
-          new Date(datresume[0].fecha_nacimiento),
+          new Date(firstResume?.fecha_nacimiento ?? 0),
         ),
-        calificacion: datresume[0].calificacion,
+        calificacion: firstResume?.calificacion,
       },
       marcaagua: marcaagua,
       entidades: list,
@@ -541,17 +741,18 @@ export class ResumeService {
         dateStyle: 'short',
         timeStyle: 'short',
       }).format(new Date(fechaImpDate)),
-      fecha_estudio: festudio,
+      fecha_estudio: festudio ?? '',
     };
     //console.log('🚀 ~ data:', data.basic);
     const pdf = await generatePDF(data);
     return pdf;
   }
 
-  private handleExceptions(error: any) {
-    if (error.code === 11000) {
+  private handleExceptions(error: unknown) {
+    const err = error as { code?: number; keyValue?: unknown } | undefined;
+    if (err && err.code === 11000) {
       throw new BadRequestException(
-        `Resume exists in db ${JSON.stringify(error.keyValue)}`,
+        `Resume exists in db ${JSON.stringify(err.keyValue)}`,
       );
     }
     console.log(error);

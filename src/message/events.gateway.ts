@@ -4,12 +4,27 @@ import {
   WebSocketServer,
   SubscribeMessage,
   MessageBody,
-  ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import * as admin from 'firebase-admin';
+
+type WsMessage = {
+  id: string;
+  senderEmail?: string;
+  receiverEmail?: string | null;
+  message?: string;
+  isSeen?: boolean;
+  timestamp?: unknown;
+  type?: string;
+  timeOnlineInSeconds?: number | null;
+  url?: string | null;
+  notificationType?: string | null;
+  utilId?: string | null;
+  notificationDescription?: string | null;
+};
 
 @WebSocketGateway({
   cors: {
@@ -23,6 +38,57 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private userSockets: Map<string, string> = new Map();
+
+  private getTimestampMs(ts: unknown): number {
+    if (
+      ts &&
+      typeof ts === 'object' &&
+      'toMillis' in (ts as Record<string, unknown>) &&
+      typeof (ts as { toMillis: () => number }).toMillis === 'function'
+    ) {
+      return (ts as { toMillis: () => number }).toMillis();
+    }
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts === 'number') return ts;
+    if (typeof ts === 'string') {
+      const ms = Date.parse(ts);
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+    return 0;
+  }
+
+  private extractMessage(id: string, raw: Record<string, unknown>): WsMessage {
+    const senderEmail = raw['senderEmail'];
+    const receiverEmail = raw['receiverEmail'];
+    const message = raw['message'];
+    const isSeen = raw['isSeen'];
+    const timestamp = raw['timestamp'];
+    const type = raw['type'];
+    const timeOnlineInSeconds = raw['timeOnlineInSeconds'];
+    const url = raw['url'];
+    const notificationType = raw['notificationType'];
+    const utilId = raw['utilId'];
+    const notificationDescription = raw['notificationDescription'];
+    return {
+      id,
+      senderEmail: typeof senderEmail === 'string' ? senderEmail : undefined,
+      receiverEmail: typeof receiverEmail === 'string' ? receiverEmail : null,
+      message: typeof message === 'string' ? message : undefined,
+      isSeen: typeof isSeen === 'boolean' ? isSeen : undefined,
+      timestamp: timestamp,
+      type: typeof type === 'string' ? type : undefined,
+      timeOnlineInSeconds:
+        typeof timeOnlineInSeconds === 'number' ? timeOnlineInSeconds : null,
+      url: typeof url === 'string' ? url : null,
+      notificationType:
+        typeof notificationType === 'string' ? notificationType : null,
+      utilId: typeof utilId === 'string' ? utilId : null,
+      notificationDescription:
+        typeof notificationDescription === 'string'
+          ? notificationDescription
+          : null,
+    };
+  }
 
   async handleConnection(client: Socket) {
     try {
@@ -47,7 +113,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.userSockets.set(email, client.id);
       console.log(`✅ ${email} conectado con socket ${client.id}`);
     } catch (error) {
-      console.log('❌ Error de autenticación WebSocket:', error.message);
+      console.log('❌ Error de autenticación WebSocket:', String(error));
       client.disconnect();
     }
   }
@@ -70,6 +136,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderEmail: string;
       message: string;
       timeOnlineInSeconds: number;
+      url?: string;
+      notificationType?: string;
+      utilId?: string;
+      notificationDescription?: string;
     },
   ) {
     const msg = {
@@ -77,9 +147,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       receiverEmail: null,
       message: data.message,
       isSeen: false,
-      timestamp: new Date(),
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
       type: 'broadcast',
       timeOnlineInSeconds: data.timeOnlineInSeconds || 3600,
+      url: data.url || null,
+      notificationType: data.notificationType || null,
+      utilId: data.utilId || null,
+      notificationDescription: data.notificationDescription || null,
     };
     //Logger.log( {msg});
     await this.firebaseService
@@ -98,27 +172,28 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderEmail: string;
       receiverEmail: string;
       message: string;
+      url?: string;
+      notificationType?: string;
+      utilId?: string;
+      notificationDescription?: string;
     },
   ) {
-    Logger.log( {data: data});
+    Logger.log({ data: data });
     const socketId = this.userSockets.get(data.receiverEmail);
     Logger.log({ userSockets: this.userSockets });
     Logger.log({ socketId: socketId });
-    let senderEmail: string | null = null;
-    this.userSockets.forEach((value, key) => {
-      Logger.log({ key: key, value: value });
-      if (value === socketId) {
-        senderEmail = key;
-      }
-    });
     const msg = {
       senderEmail: data.senderEmail,
       receiverEmail: data.receiverEmail,
       message: data.message,
       isSeen: false,
-      timestamp: new Date(),
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
       type: 'private',
       timeOnlineInSeconds: null,
+      url: data.url || null,
+      notificationType: data.notificationType || null,
+      utilId: data.utilId || null,
+      notificationDescription: data.notificationDescription || null,
     };
     Logger.log({ msg });
     await this.firebaseService
@@ -129,5 +204,76 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (socketId) {
       this.server.to(socketId).emit('privateMessage', msg);
     }
+  }
+
+  // 📥 Listar mensajes por usuario (sin filtrar por isSeen)
+  @SubscribeMessage('listMessagesByUser')
+  async listMessagesByUser(
+    @MessageBody()
+    data: {
+      receiverEmail: string;
+      limit?: number;
+      includeBroadcast?: boolean; // incluir mensajes de tipo broadcast
+    },
+  ) {
+    const db = this.firebaseService.getFirestore();
+    const limit = Number(data?.limit) || 50;
+    const includeBroadcast = Boolean(data?.includeBroadcast);
+
+    // Obtener privados del usuario (sin isSeen)
+    const privateSnap = await db
+      .collection('ws-messages')
+      .where('receiverEmail', '==', data.receiverEmail)
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get()
+      .catch(async () => {
+        // Si no existe índice para orderBy, hacemos fallback sin order y ordenamos en memoria
+        const s = await db
+          .collection('ws-messages')
+          .where('receiverEmail', '==', data.receiverEmail)
+          .limit(limit)
+          .get();
+        return s;
+      });
+    let docs: WsMessage[] = privateSnap.docs.map((d) =>
+      this.extractMessage(d.id, d.data() as Record<string, unknown>),
+    );
+
+    // Incluir broadcasts si se solicita
+    if (includeBroadcast) {
+      const broadcastSnap = await db
+        .collection('ws-messages')
+        .where('type', '==', 'broadcast')
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .get()
+        .catch(async () => {
+          const s = await db
+            .collection('ws-messages')
+            .where('type', '==', 'broadcast')
+            .limit(limit)
+            .get();
+          return s;
+        });
+
+      const broadcasts: WsMessage[] = broadcastSnap.docs.map((d) =>
+        this.extractMessage(d.id, d.data() as Record<string, unknown>),
+      );
+
+      docs = docs.concat(broadcasts);
+    }
+
+    // Ordenar por timestamp desc en memoria y truncar a limit
+    docs.sort(
+      (a, b) =>
+        this.getTimestampMs(b?.timestamp) - this.getTimestampMs(a?.timestamp),
+    );
+    docs = docs.slice(0, limit);
+
+    return {
+      docs,
+      total: docs.length,
+    };
   }
 }
