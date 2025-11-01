@@ -276,4 +276,158 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       total: docs.length,
     };
   }
+
+  // 🗑️ Eliminar un mensaje/notificación
+  @SubscribeMessage('deleteMessage')
+  async handleDeleteMessage(
+    @MessageBody()
+    data: {
+      messageId: string;
+      userEmail: string;
+    },
+  ) {
+    try {
+      const db = this.firebaseService.getFirestore();
+      const docRef = db.collection('ws-messages').doc(data.messageId);
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
+        return {
+          success: false,
+          error: 'Mensaje no encontrado',
+        };
+      }
+
+      const msgData = doc.data();
+
+      // Validar que el usuario puede eliminar este mensaje
+      // Puede eliminar si: es el receptor o es un broadcast
+      if (
+        msgData?.receiverEmail !== data.userEmail &&
+        msgData?.type !== 'broadcast'
+      ) {
+        return {
+          success: false,
+          error: 'No autorizado para eliminar este mensaje',
+        };
+      }
+
+      await docRef.delete();
+
+      return {
+        success: true,
+        messageId: data.messageId,
+      };
+    } catch (error) {
+      Logger.error('Error eliminando mensaje:', error);
+      return {
+        success: false,
+        error: 'Error al eliminar el mensaje',
+      };
+    }
+  }
+
+  // ✅ Marcar mensaje como leído
+  @SubscribeMessage('markAsRead')
+  async handleMarkAsRead(
+    @MessageBody()
+    data: {
+      messageId: string;
+      userEmail: string;
+    },
+  ) {
+    try {
+      const db = this.firebaseService.getFirestore();
+      const docRef = db.collection('ws-messages').doc(data.messageId);
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
+        return {
+          success: false,
+          error: 'Mensaje no encontrado',
+        };
+      }
+
+      const msgData = doc.data();
+
+      // Validar que el usuario puede marcar como leído
+      if (
+        msgData?.receiverEmail !== data.userEmail &&
+        msgData?.type !== 'broadcast'
+      ) {
+        return {
+          success: false,
+          error: 'No autorizado para modificar este mensaje',
+        };
+      }
+
+      await docRef.update({
+        isSeen: true,
+      });
+
+      return {
+        success: true,
+        messageId: data.messageId,
+      };
+    } catch (error) {
+      Logger.error('Error marcando mensaje como leído:', error);
+      return {
+        success: false,
+        error: 'Error al marcar el mensaje como leído',
+      };
+    }
+  }
+
+  // ✅ Marcar múltiples mensajes como leídos
+  @SubscribeMessage('markMultipleAsRead')
+  async handleMarkMultipleAsRead(
+    @MessageBody()
+    data: {
+      messageIds: string[];
+      userEmail: string;
+    },
+  ) {
+    try {
+      const db = this.firebaseService.getFirestore();
+      const batch = db.batch();
+      let updated = 0;
+      let errors = 0;
+
+      for (const messageId of data.messageIds) {
+        try {
+          const docRef = db.collection('ws-messages').doc(messageId);
+          const doc = await docRef.get();
+
+          if (doc.exists) {
+            const msgData = doc.data();
+            // Solo actualizar si el usuario está autorizado
+            if (
+              msgData?.receiverEmail === data.userEmail ||
+              msgData?.type === 'broadcast'
+            ) {
+              batch.update(docRef, { isSeen: true });
+              updated++;
+            }
+          }
+        } catch {
+          errors++;
+        }
+      }
+
+      await batch.commit();
+
+      return {
+        success: true,
+        updated,
+        errors,
+        total: data.messageIds.length,
+      };
+    } catch (error) {
+      Logger.error('Error marcando múltiples mensajes:', error);
+      return {
+        success: false,
+        error: 'Error al marcar los mensajes como leídos',
+      };
+    }
+  }
 }
