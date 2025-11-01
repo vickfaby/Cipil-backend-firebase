@@ -129,17 +129,40 @@ export class ResumevehiculoService {
             { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
             { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
             { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'user_id',
+              select: 'nombre correo foto _id roles_id',
+              populate: {
+                path: 'roles_id',
+                select: 'nombre _id',
+              },
+            },
           ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
+          .lean()
           .exec(),
         this.resumevehiculoModel.countDocuments(filter),
       ]);
 
       const totalPages = Math.ceil(totalDocs / limit) || 1;
+
+      // Transformar docs: renombrar user_id a usuario_creador
+      const transformedDocs = (docs as Array<Record<string, unknown>>).map(
+        (doc) => {
+          const { user_id, ...rest } = doc as Record<string, unknown> & {
+            user_id?: unknown;
+          };
+          return {
+            ...rest,
+            usuario_creador: user_id ?? null,
+          } as Record<string, unknown>;
+        },
+      );
+
       return {
-        docs,
+        docs: transformedDocs,
         totalDocs,
         limit,
         totalPages,
@@ -184,17 +207,40 @@ export class ResumevehiculoService {
             { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
             { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
             { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'user_id',
+              select: 'nombre correo foto _id roles_id',
+              populate: {
+                path: 'roles_id',
+                select: 'nombre _id',
+              },
+            },
           ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
+          .lean()
           .exec(),
         this.resumevehiculoModel.countDocuments(filter),
       ]);
 
       const totalPages = Math.ceil(totalDocs / limit) || 1;
+
+      // Transformar docs: renombrar user_id a usuario_creador
+      const transformedDocs = (docs as Array<Record<string, unknown>>).map(
+        (doc) => {
+          const { user_id, ...rest } = doc as Record<string, unknown> & {
+            user_id?: unknown;
+          };
+          return {
+            ...rest,
+            usuario_creador: user_id ?? null,
+          } as Record<string, unknown>;
+        },
+      );
+
       return {
-        docs,
+        docs: transformedDocs,
         totalDocs,
         limit,
         totalPages,
