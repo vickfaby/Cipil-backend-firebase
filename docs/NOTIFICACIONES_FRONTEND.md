@@ -77,7 +77,8 @@ socket.emit('sendMessageToAll', {
   timeOnlineInSeconds: 3600,
   url: 'https://tuapp.com/mantenimiento',
   notificationType: 'SYSTEM_ALERT',
-  utilId: 'MAINT-2025-001',
+  resumenIdRelated: 'RESUMEN-12345',
+  invitationIdRelated: 'INV-98765',
   notificationDescription: 'El sistema estará en mantenimiento de 2am a 4am'
 });
 ```
@@ -90,7 +91,8 @@ socket.emit('sendMessageToAll', {
 | `timeOnlineInSeconds` | `number` | ✅ Sí | Tiempo de visibilidad (segundos) |
 | `url` | `string` | ❌ No | URL de acción opcional |
 | `notificationType` | `string` | ❌ No | Tipo de notificación |
-| `utilId` | `string` | ❌ No | ID útil relacionado |
+| `resumenIdRelated` | `string` | ❌ No | ID del resumen relacionado |
+| `invitationIdRelated` | `string` | ❌ No | ID de invitación relacionada |
 | `notificationDescription` | `string` | ❌ No | Descripción adicional |
 
 ---
@@ -106,7 +108,8 @@ socket.emit('sendMessageToUser', {
   message: 'Nueva invitación de vehículo',
   url: '/invitaciones/VEH-12345',
   notificationType: 'VEHICLE_INVITATION',
-  utilId: 'INV-98765',
+  resumenIdRelated: '68fad680bb15945b59839097',
+  invitationIdRelated: 'INV-98765',
   notificationDescription: 'Se te ha asignado un nuevo vehículo'
 });
 ```
@@ -119,7 +122,8 @@ socket.emit('sendMessageToUser', {
 | `message` | `string` | ✅ Sí | Mensaje de la notificación |
 | `url` | `string` | ❌ No | URL de acción opcional |
 | `notificationType` | `string` | ❌ No | Tipo de notificación |
-| `utilId` | `string` | ❌ No | ID útil relacionado |
+| `resumenIdRelated` | `string` | ❌ No | ID del resumen relacionado |
+| `invitationIdRelated` | `string` | ❌ No | ID de invitación relacionada |
 | `notificationDescription` | `string` | ❌ No | Descripción adicional |
 
 ---
@@ -272,7 +276,8 @@ interface WsMessage {
   timeOnlineInSeconds?: number | null; // Duración de visibilidad
   url?: string | null;                 // URL de acción
   notificationType?: string | null;    // Tipo de notificación
-  utilId?: string | null;              // ID relacionado (invitación, operador, etc.)
+  resumenIdRelated?: string | null;    // ID del resumen relacionado (operador o vehículo)
+  invitationIdRelated?: string | null; // ID de la invitación relacionada
   notificationDescription?: string | null; // Descripción adicional
 }
 ```
@@ -299,7 +304,8 @@ export interface WsMessage {
   timeOnlineInSeconds?: number | null;
   url?: string | null;
   notificationType?: string | null;
-  utilId?: string | null;
+  resumenIdRelated?: string | null;
+  invitationIdRelated?: string | null;
   notificationDescription?: string | null;
 }
 
@@ -422,7 +428,8 @@ export class NotificationService {
   sendPrivateMessage(receiverEmail: string, message: string, options?: {
     url?: string;
     notificationType?: string;
-    utilId?: string;
+    resumenIdRelated?: string;
+    invitationIdRelated?: string;
     notificationDescription?: string;
   }) {
     this.socket.emit('sendMessageToUser', {
@@ -431,7 +438,8 @@ export class NotificationService {
       message,
       url: options?.url,
       notificationType: options?.notificationType,
-      utilId: options?.utilId,
+      resumenIdRelated: options?.resumenIdRelated,
+      invitationIdRelated: options?.invitationIdRelated,
       notificationDescription: options?.notificationDescription
     });
   }
@@ -809,7 +817,8 @@ interface WsMessage {
   timeOnlineInSeconds?: number | null;
   url?: string | null;
   notificationType?: string | null;
-  utilId?: string | null;
+  resumenIdRelated?: string | null;
+  invitationIdRelated?: string | null;
   notificationDescription?: string | null;
 }
 
@@ -1081,7 +1090,8 @@ socket.emit('sendMessageToUser', {
   message: 'Nueva invitación de vehículo',
   url: '/vehiculos/invitaciones/12345',
   notificationType: 'VEHICLE_INVITATION',
-  utilId: 'VEH-12345',
+  resumenIdRelated: '68fad680bb15945b59839097',
+  invitationIdRelated: 'INV-12345',
   notificationDescription: 'Te han asignado un vehículo Ford F-150 2023'
 });
 ```
@@ -1095,7 +1105,8 @@ socket.emit('sendMessageToUser', {
   message: 'Documento rechazado',
   url: '/documentos/DOC-789',
   notificationType: 'DOCUMENT_REJECTED',
-  utilId: 'DOC-789',
+  resumenIdRelated: '68fad680bb15945b59839097',
+  invitationIdRelated: null,
   notificationDescription: 'Tu licencia de conducir fue rechazada. Por favor, carga una imagen más clara.'
 });
 ```
@@ -1109,7 +1120,8 @@ socket.emit('sendMessageToAll', {
   timeOnlineInSeconds: 7200, // 2 horas
   url: '/avisos/mantenimiento',
   notificationType: 'SYSTEM_ALERT',
-  utilId: 'MAINT-2025-001',
+  resumenIdRelated: null,
+  invitationIdRelated: null,
   notificationDescription: 'El sistema estará fuera de servicio de 2am a 4am'
 });
 ```

@@ -22,7 +22,8 @@ type WsMessage = {
   timeOnlineInSeconds?: number | null;
   url?: string | null;
   notificationType?: string | null;
-  utilId?: string | null;
+  resumenIdRelated?: string | null;
+  invitationIdRelated?: string | null;
   notificationDescription?: string | null;
 };
 
@@ -67,7 +68,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const timeOnlineInSeconds = raw['timeOnlineInSeconds'];
     const url = raw['url'];
     const notificationType = raw['notificationType'];
-    const utilId = raw['utilId'];
+    const resumenIdRelated = raw['resumenIdRelated'];
+    const invitationIdRelated = raw['invitationIdRelated'];
     const notificationDescription = raw['notificationDescription'];
     return {
       id,
@@ -82,7 +84,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       url: typeof url === 'string' ? url : null,
       notificationType:
         typeof notificationType === 'string' ? notificationType : null,
-      utilId: typeof utilId === 'string' ? utilId : null,
+      resumenIdRelated:
+        typeof resumenIdRelated === 'string' ? resumenIdRelated : null,
+      invitationIdRelated:
+        typeof invitationIdRelated === 'string' ? invitationIdRelated : null,
       notificationDescription:
         typeof notificationDescription === 'string'
           ? notificationDescription
@@ -138,7 +143,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timeOnlineInSeconds: number;
       url?: string;
       notificationType?: string;
-      utilId?: string;
+      resumenIdRelated?: string;
+      invitationIdRelated?: string;
       notificationDescription?: string;
     },
   ) {
@@ -152,7 +158,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timeOnlineInSeconds: data.timeOnlineInSeconds || 3600,
       url: data.url || null,
       notificationType: data.notificationType || null,
-      utilId: data.utilId || null,
+      resumenIdRelated: data.resumenIdRelated || null,
+      invitationIdRelated: data.invitationIdRelated || null,
       notificationDescription: data.notificationDescription || null,
     };
     //Logger.log( {msg});
@@ -174,7 +181,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       message: string;
       url?: string;
       notificationType?: string;
-      utilId?: string;
+      resumenIdRelated?: string;
+      invitationIdRelated?: string;
       notificationDescription?: string;
     },
   ) {
@@ -192,7 +200,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timeOnlineInSeconds: null,
       url: data.url || null,
       notificationType: data.notificationType || null,
-      utilId: data.utilId || null,
+      resumenIdRelated: data.resumenIdRelated || null,
+      invitationIdRelated: data.invitationIdRelated || null,
       notificationDescription: data.notificationDescription || null,
     };
     Logger.log({ msg });
