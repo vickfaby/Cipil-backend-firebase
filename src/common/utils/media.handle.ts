@@ -1,5 +1,7 @@
 //import { diskStorage } from 'multer';
-import SharpMulter from 'sharp-multer';
+// Compat CJS/ESM: sharp-multer puede exportar default o función CJS
+import * as SharpMulterNS from 'sharp-multer';
+const SharpMulter: any = (SharpMulterNS as any)?.default ?? (SharpMulterNS as any);
 
 // export const storage = diskStorage({
 //   destination: `./public/uploads`,

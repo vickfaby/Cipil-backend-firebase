@@ -80,9 +80,12 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`App running on port ${configService.get('PORT')}`);
   logger.log(`Database running on port ${configService.get('MONGODB')}`);
+  logger.log(`FIREBASE_PRIVATE_KEY ${configService.get('FIREBASE_PRIVATE_KEY')}`);
+  logger.log(`FIREBASE_CLIENT_EMAIL ${configService.get('FIREBASE_CLIENT_EMAIL')}`);
+  logger.log(`FIREBASE_PROJECT_ID ${configService.get('FIREBASE_PROJECT_ID')}`);
   logger.log(`Swagger documentation available at: http://localhost:${configService.get('PORT')}/documentation`);
  // logger.log(`API_SENDGRID: ${configService.get('SENDGRID_API_KEY')}`);
  // logger.log(`API_SENDGRID_FROM_EMAIL: ${configService.get('SENDGRID_FROM_EMAIL')}`);
