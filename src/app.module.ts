@@ -8,7 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './common/utils/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import mongooseDelete from 'mongoose-delete';
+import * as mongooseDeleteNS from 'mongoose-delete';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -76,6 +76,8 @@ import {
           configService.get<string>('MONGODB') ||
           'mongodb://localhost:27017/cipil',
         connectionFactory: (connection: Connection) => {
+          const mongooseDelete: any =
+            (mongooseDeleteNS as any)?.default ?? (mongooseDeleteNS as any);
           connection.plugin(mongooseDelete, {
             overrideMethods: 'all',
           });
