@@ -8,7 +8,6 @@ export class CreateEntidadesemisorasDto {
   nombre_entidad: string;
 
   @IsNumber()
-  @MinLength(1)
   @ApiProperty()
   telefono_entidad: number;
 

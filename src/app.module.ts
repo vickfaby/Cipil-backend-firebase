@@ -7,7 +7,8 @@ import { ProfileController } from './profile/profile.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './common/utils/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Connection, Schema } from 'mongoose';
+import { Connection } from 'mongoose';
+import mongooseDelete from 'mongoose-delete';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -69,13 +70,13 @@ import {
     EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         uri:
           configService.get<string>('config.mongodb') ||
           configService.get<string>('MONGODB') ||
           'mongodb://localhost:27017/cipil',
         connectionFactory: (connection: Connection) => {
-          connection.plugin(mongoose_delete, {
+          connection.plugin(mongooseDelete, {
             overrideMethods: 'all',
           });
           return connection;
@@ -130,6 +131,3 @@ import {
   providers: [AppService, EventsGateway, FirebaseService],
 })
 export class AppModule {}
-function mongoose_delete(schema: Schema, opts?: any): void {
-  // noop plugin placeholder
-}
