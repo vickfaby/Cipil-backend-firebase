@@ -336,7 +336,7 @@ POST /grupodocumentos
 
 // Body - CAMPOS REQUERIDOS
 {
-  "nombre_grupodocumento": "Documentos Personales"  // string, mínimo 1 carácter (REQUERIDO)
+  "nombre_documento": "Documentos Personales"  // string, mínimo 1 carácter (REQUERIDO)
 }
 
 // Ejemplo
@@ -347,7 +347,7 @@ const response = await fetch(`${API_BASE_URL}/grupodocumentos`, {
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    nombre_grupodocumento: "Documentos Personales"
+    nombre_documento: "Documentos Personales"
   })
 });
 const data = await response.json();
@@ -359,7 +359,7 @@ PATCH /grupodocumentos/:id
 
 // Body (parcial) - Todos los campos son opcionales
 {
-  "nombre_grupodocumento": "Documentos de Identificación Personal"  // string, mínimo 1 carácter (OPCIONAL)
+  "nombre_documento": "Documentos de Identificación Personal"  // string, mínimo 1 carácter (OPCIONAL)
 }
 
 // Ejemplo
@@ -370,7 +370,7 @@ const response = await fetch(`${API_BASE_URL}/grupodocumentos/${id}`, {
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    nombre_grupodocumento: "Documentos de Identificación Personal"
+    nombre_documento: "Documentos de Identificación Personal"
   })
 });
 const data = await response.json();
@@ -1529,7 +1529,7 @@ API_BASE_URL=https://api.cipilapp.com  // Producción
 | **Tipos de Documento** | `/tipodocumentos` | `nombre_tipodocumento` (string), `detalle_tipodocumento` (string) |
 | **Categorías** | `/categorias` | `nombre_categoria` (string) |
 | **Entidades Emisoras** | `/entidadesemisoras` | `nombre_entidad` (string), `telefono_entidad` (number), `direccion_entidad` (string), `ciudad_entidad` (string) |
-| **Grupos de Documento** | `/grupodocumentos` | `nombre_grupodocumento` (string) |
+| **Grupos de Documento** | `/grupodocumentos` | `nombre_documento` (string) |
 | **Tipos de Persona** | `/tipopersona` | `nombre_tipopersona` (string) |
 | **Sexo** | `/sexo` | `nombre_sexo` (string) |
 | **Tipos de Relación** | `/tiporelaciones` | `nombre_tiporelacion` (string) |

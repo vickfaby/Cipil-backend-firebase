@@ -5,5 +5,5 @@ export class CreateGrupodocumentoDto {
   @IsString()
   @MinLength(1)
   @ApiProperty()
-  nombre_grupodocumento: string;
+  nombre_documento: string;
 }

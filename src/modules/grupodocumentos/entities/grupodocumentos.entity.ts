@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 @Schema({ timestamps: true })
 export class Grupodocumentos extends Document {
   @Prop()
-  nombre_grupodocumento: string;
+  nombre_documento: string;
 }
 
 export const GrupodocumentosSchema =
