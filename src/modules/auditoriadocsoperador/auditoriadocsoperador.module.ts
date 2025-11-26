@@ -7,6 +7,7 @@ import { AuditoriadocsoperadorService } from './auditoriadocsoperador.service';
 import { Auditoriadocsoperador, AuditoriadocsoperadorSchema } from './entities/auditoriadocsoperador.entity';
 import { Resume, ResumeSchema } from '../resume/entities/resume.entity';
 import { Documentoscargadosresume, DocumentoscargadosresumeSchema } from '../documentoscargadosresume/entities/documentoscargadosresume.entity';
+import { Seguridadsociales, SeguridadsocialesSchema } from '../seguridadsociales/entities/seguridadsociales.entity';
 import { Usuarios, UsuariosSchema } from '../usuarios/entities/usuarios.entity';
 
 @Module({
@@ -17,6 +18,7 @@ import { Usuarios, UsuariosSchema } from '../usuarios/entities/usuarios.entity';
       { name: Auditoriadocsoperador.name, schema: AuditoriadocsoperadorSchema },
       { name: Resume.name, schema: ResumeSchema },
       { name: Documentoscargadosresume.name, schema: DocumentoscargadosresumeSchema },
+      { name: Seguridadsociales.name, schema: SeguridadsocialesSchema },
       { name: Usuarios.name, schema: UsuariosSchema },
     ]),
   ],

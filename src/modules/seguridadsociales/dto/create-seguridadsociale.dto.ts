@@ -53,4 +53,12 @@ export class CreateSeguridadsocialeDto {
   @MinLength(1)
   @ApiProperty()
   tipoentidad_id: string;
+
+  @IsNumber()
+  @ApiProperty()
+  estado_documento: number;
+
+  @IsOptional()
+  @ApiProperty()
+  documento: string;
 }

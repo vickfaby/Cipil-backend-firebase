@@ -97,6 +97,8 @@ export class SeguridadsocialesService {
           status: obj.status,
           tipoentidad_id: obj.tipoentidad_id,
           user_id: obj.user_id,
+          estado_documento: obj.estado_documento,
+          documento: obj.documento,
         };
         await this.seguridadsocialesModel.updateOne(filter, update, {
           upsert: true,
@@ -135,6 +137,8 @@ export class SeguridadsocialesService {
             status: newSeg.status,
             tipoentidad_id: newSeg.tipoentidad_id,
             user_id: newSeg.user_id,
+            estado_documento: newSeg.estado_documento,
+            documento: newSeg.documento,
           };
 
           await this.seguridadsocialesModel.updateOne(
@@ -172,6 +176,24 @@ export class SeguridadsocialesService {
       }
       await seguridadsociales.updateOne(updateSeguridadsocialeDto);
       return { ...seguridadsociales.toJSON(), ...updateSeguridadsocialeDto };
+    } catch (error) {
+      this.handleExceptions(error);
+    }
+  }
+
+  async updateImagen(id: string, filename: string) {
+    const seguridadsocial = await this.findOne(id);
+    
+    if (!seguridadsocial) {
+      throw new BadRequestException('Seguridad social no encontrada');
+    }
+    
+    try {
+      await seguridadsocial.updateOne({ documento: filename });
+      return {
+        ...seguridadsocial.toJSON(),
+        documento: filename,
+      };
     } catch (error) {
       this.handleExceptions(error);
     }

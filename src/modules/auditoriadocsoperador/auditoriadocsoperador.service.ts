@@ -13,6 +13,7 @@ import { CreateAuditoriadocsoperadorDto } from './dto/create-auditoriadocsoperad
 import { UpdateAuditoriadocsoperadorDto } from './dto/update-auditoriadocsoperador.dto';
 import { EstadoAuditoriaDocOperador } from './entities/estado-auditoria.enum';
 import { Documentoscargadosresume } from '../documentoscargadosresume/entities/documentoscargadosresume.entity';
+import { Seguridadsociales } from '../seguridadsociales/entities/seguridadsociales.entity';
 
 @Injectable()
 export class AuditoriadocsoperadorService {
@@ -21,10 +22,24 @@ export class AuditoriadocsoperadorService {
     private readonly auditoriaModel: ModelExt<Auditoriadocsoperador>,
     @InjectModel(Documentoscargadosresume.name)
     private readonly documentoModel: ModelExt<Documentoscargadosresume>,
+    @InjectModel(Seguridadsociales.name)
+    private readonly seguridadSocialModel: ModelExt<Seguridadsociales>,
   ) {}
 
   async create(dto: CreateAuditoriadocsoperadorDto) {
     try {
+      if (!dto.documento_cargado_id && !dto.seguridad_social_id) {
+        throw new BadRequestException(
+          'Debe proporcionar documento_cargado_id o seguridad_social_id',
+        );
+      }
+      // Permitir solo uno
+      if (dto.documento_cargado_id && dto.seguridad_social_id) {
+        throw new BadRequestException(
+          'Solo debe proporcionar uno: documento_cargado_id o seguridad_social_id',
+        );
+      }
+
       return await this.auditoriaModel.create(dto);
     } catch (error) {
       this.handleExceptions(error);
@@ -46,6 +61,16 @@ export class AuditoriadocsoperadorService {
             select: 'nombre documento estado_documento',
             model: 'Documentoscargadosresume',
           },
+          {
+            path: 'seguridad_social_id',
+            select: 'documento estado_documento tipoentidad_id',
+            model: 'Seguridadsociales',
+            populate: {
+              path: 'tipoentidad_id',
+              select: 'entidad',
+              model: 'Entidades',
+            },
+          },
           { path: 'auditor', select: 'nombre correo', model: 'Usuarios' },
         ])
         .select('-__v -deleted')
@@ -55,6 +80,9 @@ export class AuditoriadocsoperadorService {
         const json: any = doc.toJSON();
         if (json?.documento_cargado_id?.documento) {
           json.documento_cargado_id.url = `/documentoscargadosresume/view/${json.documento_cargado_id.documento}`;
+        }
+        if (json?.seguridad_social_id?.documento) {
+          json.seguridad_social_id.url = `/seguridadsociales/view/${json.seguridad_social_id.documento}`;
         }
         return json;
       });
@@ -78,6 +106,16 @@ export class AuditoriadocsoperadorService {
             select: 'nombre documento estado_documento',
             model: 'Documentoscargadosresume',
           },
+          {
+            path: 'seguridad_social_id',
+            select: 'documento estado_documento tipoentidad_id',
+            model: 'Seguridadsociales',
+            populate: {
+              path: 'tipoentidad_id',
+              select: 'entidad',
+              model: 'Entidades',
+            },
+          },
           { path: 'auditor', select: 'nombre correo', model: 'Usuarios' },
         ])
         .exec();
@@ -87,6 +125,9 @@ export class AuditoriadocsoperadorService {
       const json: any = result.toJSON();
       if (json?.documento_cargado_id?.documento) {
         json.documento_cargado_id.url = `/documentoscargadosresume/view/${json.documento_cargado_id.documento}`;
+      }
+      if (json?.seguridad_social_id?.documento) {
+        json.seguridad_social_id.url = `/seguridadsociales/view/${json.seguridad_social_id.documento}`;
       }
       return json;
     } catch (error) {
@@ -126,33 +167,69 @@ export class AuditoriadocsoperadorService {
             .exec();
 
           result.documento_cargado_id = documento as any;
-          if (!documento) {
-            throw new NotFoundException('Documento no encontrado');
-          }
+        }
+
+        if (result.seguridad_social_id) {
+          const seguridadSocial = await this.seguridadSocialModel
+            .findOne({ _id: result.seguridad_social_id })
+            .populate({
+              path: 'resume_id',
+              model: 'Resume',
+              select:
+                'nombre apellido razonsocial numerodocumento telefono direccion fecha_nacimiento ubicacion tipodocumento sexo foto',
+            })
+            .populate({
+              path: 'tipoentidad_id',
+              model: 'Entidades',
+              select: 'entidad',
+            })
+            .lean()
+            .exec();
+
+          result.seguridad_social_id = seguridadSocial as any;
         }
       }
 
-      // Completar documento_cargado_id.resume_id con el resume del documento de auditoría si viene nulo
+      // Completar resume_id
       return results
         .map((json: any) => {
           const hasDocumentoCargado = json?.documento_cargado_id;
-          const nestedResumeIsMissing =
-            hasDocumentoCargado && !json.documento_cargado_id.resume_id;
-          if (nestedResumeIsMissing && json?.resume_id) {
+          const hasSeguridadSocial = json?.seguridad_social_id;
+
+          if (
+            hasDocumentoCargado &&
+            !json.documento_cargado_id.resume_id &&
+            json.resume_id
+          ) {
             json.documento_cargado_id.resume_id = json.resume_id;
           }
-          // Incluir URL pública del documento cargado si está disponible
+
+          if (
+            hasSeguridadSocial &&
+            !json.seguridad_social_id.resume_id &&
+            json.resume_id
+          ) {
+            json.seguridad_social_id.resume_id = json.resume_id;
+          }
+
+          // Incluir URL pública
           if (json?.documento_cargado_id?.documento) {
             json.documento_cargado_id.url = `${json.documento_cargado_id.documento}`;
           }
+          if (json?.seguridad_social_id?.documento) {
+            json.seguridad_social_id.url = `${json.seguridad_social_id.documento}`;
+          }
+
           return json;
         })
-        .filter(
-          (json: any) =>
-            json.documento_cargado_id !== null &&
-            json.resume_id !== null &&
-            json.resume_id !== undefined,
-        ); // Filtrar los que no tienen documento_cargado_id o resume_id
+        .filter((json: any) => {
+          const hasDoc =
+            json.documento_cargado_id !== null ||
+            json.seguridad_social_id !== null;
+          const hasResume =
+            json.resume_id !== null && json.resume_id !== undefined;
+          return hasDoc && hasResume;
+        });
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -169,7 +246,10 @@ export class AuditoriadocsoperadorService {
         },
         {
           $group: {
-            _id: '$documento_cargado_id',
+            _id: {
+              doc: '$documento_cargado_id',
+              seg: '$seguridad_social_id',
+            },
             maxUpdatedAt: { $max: '$updatedAt' },
           },
         },
@@ -179,12 +259,15 @@ export class AuditoriadocsoperadorService {
       const auditoriasRecientes = [] as any[];
 
       for (const doc of documentosConMaxUpdate) {
+        const query: any = {
+          updatedAt: doc.maxUpdatedAt,
+          deleted: false,
+        };
+        if (doc._id.doc) query.documento_cargado_id = doc._id.doc;
+        if (doc._id.seg) query.seguridad_social_id = doc._id.seg;
+
         const auditoriaMasReciente = await this.auditoriaModel
-          .findOne({
-            documento_cargado_id: doc._id,
-            updatedAt: doc.maxUpdatedAt,
-            deleted: false,
-          })
+          .findOne(query)
           .lean()
           .exec();
 
@@ -220,31 +303,65 @@ export class AuditoriadocsoperadorService {
           .exec();
 
         if (resume) {
-          // Populate documento_cargado_id manualmente
-          const documento = await this.documentoModel
-            .findOne({ _id: auditoria.documento_cargado_id })
-            .populate({
-              path: 'resume_id',
-              model: 'Resume',
-              select:
-                'nombre apellido razonsocial numerodocumento telefono direccion fecha_nacimiento ubicacion tipodocumento sexo foto',
-            })
-            .lean()
-            .exec();
-
           const auditoriaCompleta: any = {
             ...resume,
-            documento_cargado_id: documento as any,
           };
 
-          // Agregar URL del documento
-          if (documento?.documento) {
-            auditoriaCompleta.documento_cargado_id.url = documento.documento;
+          // Populate documento_cargado_id manualmente
+          if (auditoria.documento_cargado_id) {
+            const documento = await this.documentoModel
+              .findOne({ _id: auditoria.documento_cargado_id })
+              .populate({
+                path: 'resume_id',
+                model: 'Resume',
+                select:
+                  'nombre apellido razonsocial numerodocumento telefono direccion fecha_nacimiento ubicacion tipodocumento sexo foto',
+              })
+              .lean()
+              .exec();
+
+            if (documento) {
+              auditoriaCompleta.documento_cargado_id = documento as any;
+              if (documento.documento) {
+                auditoriaCompleta.documento_cargado_id.url =
+                  documento.documento;
+              }
+              if (!documento.resume_id && resume.resume_id) {
+                auditoriaCompleta.documento_cargado_id.resume_id =
+                  resume.resume_id;
+              }
+            }
           }
 
-          // Completar resume_id del documento si falta
-          if (documento && !documento.resume_id && resume.resume_id) {
-            auditoriaCompleta.documento_cargado_id.resume_id = resume.resume_id;
+          // Populate seguridad_social_id manualmente
+          if (auditoria.seguridad_social_id) {
+            const seguridadSocial = await this.seguridadSocialModel
+              .findOne({ _id: auditoria.seguridad_social_id })
+              .populate({
+                path: 'resume_id',
+                model: 'Resume',
+                select:
+                  'nombre apellido razonsocial numerodocumento telefono direccion fecha_nacimiento ubicacion tipodocumento sexo foto',
+              })
+              .populate({
+                path: 'tipoentidad_id',
+                model: 'Entidades',
+                select: 'entidad',
+              })
+              .lean()
+              .exec();
+
+            if (seguridadSocial) {
+              auditoriaCompleta.seguridad_social_id = seguridadSocial as any;
+              if (seguridadSocial.documento) {
+                auditoriaCompleta.seguridad_social_id.url =
+                  seguridadSocial.documento;
+              }
+              if (!seguridadSocial.resume_id && resume.resume_id) {
+                auditoriaCompleta.seguridad_social_id.resume_id =
+                  resume.resume_id;
+              }
+            }
           }
 
           auditoriasConPopulates.push(auditoriaCompleta);
@@ -254,7 +371,8 @@ export class AuditoriadocsoperadorService {
       // PASO 5: Filtrar los que no tienen documento o resume válido
       const auditoriasValidas = auditoriasConPopulates.filter(
         (auditoria) =>
-          auditoria.documento_cargado_id !== null &&
+          (auditoria.documento_cargado_id !== null ||
+            auditoria.seguridad_social_id !== null) &&
           auditoria.resume_id !== null &&
           auditoria.resume_id !== undefined,
       );
@@ -289,6 +407,7 @@ export class AuditoriadocsoperadorService {
         resumeGroup.documentos_auditoria.push({
           _id: auditoria._id,
           documento_cargado_id: auditoria.documento_cargado_id,
+          seguridad_social_id: auditoria.seguridad_social_id,
           auditor: auditoria.auditor,
           estado: auditoria.estado,
           mensaje: auditoria.mensaje,

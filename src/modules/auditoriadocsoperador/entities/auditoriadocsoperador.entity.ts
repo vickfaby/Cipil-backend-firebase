@@ -3,6 +3,7 @@ import mongoose, { Document } from 'mongoose';
 
 import { Resume } from 'src/modules/resume/entities/resume.entity';
 import { Documentoscargadosresume } from 'src/modules/documentoscargadosresume/entities/documentoscargadosresume.entity';
+import { Seguridadsociales } from 'src/modules/seguridadsociales/entities/seguridadsociales.entity';
 import { Usuarios } from 'src/modules/usuarios/entities/usuarios.entity';
 import { EstadoAuditoriaDocOperador } from './estado-auditoria.enum';
 
@@ -18,9 +19,16 @@ export class Auditoriadocsoperador extends Document {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Documentoscargadosresume',
-    required: true,
+    required: false,
   })
   documento_cargado_id: Documentoscargadosresume;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Seguridadsociales',
+    required: false,
+  })
+  seguridad_social_id: Seguridadsociales;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

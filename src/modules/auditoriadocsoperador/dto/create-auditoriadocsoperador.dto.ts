@@ -8,8 +8,14 @@ export class CreateAuditoriadocsoperadorDto {
   resume_id: string;
 
   @IsMongoId()
+  @IsOptional()
   @ApiProperty({ example: '6710d1c2f2a4b1e2d3c4a5b7', description: 'ID del documento cargado (Documentoscargadosresume)' })
-  documento_cargado_id: string;
+  documento_cargado_id?: string;
+
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({ example: '6710d1c2f2a4b1e2d3c4a5b9', description: 'ID del documento de seguridad social (Seguridadsociales)' })
+  seguridad_social_id?: string;
 
   @IsMongoId()
   @ApiProperty({ example: '6710d1c2f2a4b1e2d3c4a5b8', description: 'ID del usuario auditor' })

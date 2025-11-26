@@ -224,6 +224,8 @@ export class ResumeService {
         .findById(id)
         .populate({
           path: 'entidades_seguridad_social',
+          select:
+            'tipoentidad_id grupoentidad_id fecha_afiliacion estado_afiliacion observaciones resume_id user_id status estado_documento documento _id',
         })
         .populate([
           {
@@ -236,7 +238,7 @@ export class ResumeService {
           {
             path: 'documentos',
             select:
-              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento _id',
+              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento estado_documento _id',
           },
         ]);
     } catch (error) {
@@ -251,6 +253,8 @@ export class ResumeService {
         .findById(id)
         .populate({
           path: 'entidades_seguridad_social',
+          select:
+            'tipoentidad_id grupoentidad_id fecha_afiliacion estado_afiliacion observaciones resume_id user_id status estado_documento documento _id',
         })
         .populate([
           {
@@ -263,7 +267,7 @@ export class ResumeService {
           {
             path: 'documentos',
             select:
-              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento _id',
+              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento estado_documento _id',
           },
         ])
         .lean();
@@ -272,14 +276,50 @@ export class ResumeService {
         return null;
       }
 
+      // Normalizar entidades de seguridad social para asegurar que el campo documento siempre esté presente
+      const entidadesSeguridadSocial = (resume.entidades_seguridad_social ||
+        []) as any[];
+      let entidadesNormalizadas = entidadesSeguridadSocial.map((entidad: any) => ({
+        ...entidad,
+        documento: entidad.documento || null,
+        estado_documento: entidad.estado_documento ?? 0,
+      }));
+
+      // Para cada entidad de seguridad social, obtener la auditoría más reciente
+      if (entidadesNormalizadas.length > 0) {
+        entidadesNormalizadas = await Promise.all(
+          entidadesNormalizadas.map(async (entidad: any) => {
+            const auditoriaReciente = await this.auditoriaModel
+              .findOne({
+                seguridad_social_id: entidad._id,
+                deleted: false,
+              })
+              .populate({
+                path: 'auditor',
+                select: 'nombre correo _id',
+                model: 'Usuarios',
+              })
+              .sort({ createdAt: -1 })
+              .select('-__v -deleted')
+              .lean();
+
+            return {
+              ...entidad,
+              ultima_auditoria: auditoriaReciente || null,
+            };
+          }),
+        );
+      }
+
       // Para cada documento, obtener la auditoría más reciente
+      let documentosConAuditoria: any[] = (resume.documentos || []) as any[];
       if (resume.documentos && resume.documentos.length > 0) {
-        const documentosConAuditoria = await Promise.all(
-          resume.documentos.map(async (documento: { _id?: unknown }) => {
+        documentosConAuditoria = await Promise.all(
+          (resume.documentos as any[]).map(async (documento: any) => {
             // Buscar la auditoría más reciente para este documento
             const auditoriaReciente = await this.auditoriaModel
               .findOne({
-                documento_cargado_id: (documento as { _id?: unknown })?._id,
+                documento_cargado_id: documento._id,
                 deleted: false,
               })
               .populate({
@@ -292,19 +332,19 @@ export class ResumeService {
               .lean();
 
             return {
-              ...(documento as Record<string, unknown>),
+              ...documento,
               ultima_auditoria: auditoriaReciente || null,
-            } as Record<string, unknown>;
+            };
           }),
         );
-
-        const resumeWithDocs = {
-          ...(resume as Record<string, unknown>),
-          documentos: documentosConAuditoria,
-        } as Record<string, unknown>;
-        return resumeWithDocs;
       }
-      return resume;
+
+      const resumeWithDocs = {
+        ...(resume as Record<string, unknown>),
+        entidades_seguridad_social: entidadesNormalizadas,
+        documentos: documentosConAuditoria,
+      } as Record<string, unknown>;
+      return resumeWithDocs;
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -477,6 +517,8 @@ export class ResumeService {
         .findById(id)
         .populate({
           path: 'entidades_seguridad_social',
+          select:
+            'tipoentidad_id grupoentidad_id fecha_afiliacion estado_afiliacion observaciones resume_id user_id status estado_documento documento _id',
         })
         .populate([
           {
@@ -489,7 +531,7 @@ export class ResumeService {
           {
             path: 'documentos',
             select:
-              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento _id',
+              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento estado_documento _id',
           },
         ]);
 

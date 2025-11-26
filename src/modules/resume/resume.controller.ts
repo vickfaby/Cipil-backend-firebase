@@ -32,21 +32,23 @@ import type { Multer } from 'multer';
 
 @ApiTags('Resume')
 @Controller('resume')
-@UseGuards(FirebaseAuthGuard)
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
   @Post()
+  @UseGuards(FirebaseAuthGuard)
   create(@Body() createResumeDto: CreateResumeDto) {
     return this.resumeService.create(createResumeDto);
   }
 
   @Get()
+  @UseGuards(FirebaseAuthGuard)
   findAll(@PaginateV2() pagination: any) {
     return this.resumeService.findAll(pagination);
   }
 
   @Get('/by-not-user/:user_id')
+  @UseGuards(FirebaseAuthGuard)
   findAllNotByUser(
     @Param('user_id', ParseMongoIdPipe) userId: string,
     @PaginateV2() pagination: any,
@@ -55,6 +57,7 @@ export class ResumeController {
   }
 
   @Get('/by-not-user/:user_id/search')
+  @UseGuards(FirebaseAuthGuard)
   findAllNotByUserSearch(
     @Param('user_id', ParseMongoIdPipe) userId: string,
     @PaginateV2() pagination: any,
@@ -68,21 +71,25 @@ export class ResumeController {
   }
 
   @Get(':id')
+  @UseGuards(FirebaseAuthGuard)
   findOne(@Param('id', ParseMongoIdPipe) id: string) {
     return this.resumeService.findOne(id);
   }
 
   @Get(':id/with-audits')
+  @UseGuards(FirebaseAuthGuard)
   findOneWithAudits(@Param('id', ParseMongoIdPipe) id: string) {
     return this.resumeService.findOneWithLatestAudits(id);
   }
 
   @Get('/documento/:documento')
+  @UseGuards(FirebaseAuthGuard)
   findByDocumento(@Param('documento') documento: string) {
     return this.resumeService.findByDocument(documento);
   }
 
   @Get('/by-empresa/:usuarioEmpresaId')
+  @UseGuards(FirebaseAuthGuard)
   findByUsuarioEmpresa(
     @Param('usuarioEmpresaId', ParseMongoIdPipe) usuarioEmpresaId: string,
     @PaginateV2() pagination: any,
@@ -91,6 +98,7 @@ export class ResumeController {
   }
 
   @Get('/by-empresa/:usuarioEmpresaId/search')
+  @UseGuards(FirebaseAuthGuard)
   findByUsuarioEmpresaSearch(
     @Param('usuarioEmpresaId', ParseMongoIdPipe) usuarioEmpresaId: string,
     @PaginateV2() pagination: any,
@@ -104,6 +112,7 @@ export class ResumeController {
   }
 
   @Get('/by-operador/:usuarioOperadorId')
+  @UseGuards(FirebaseAuthGuard)
   findByUsuarioOperador(
     @Param('usuarioOperadorId', ParseMongoIdPipe) usuarioOperadorId: string,
     @PaginateV2() pagination: any,
@@ -112,6 +121,7 @@ export class ResumeController {
   }
 
   @Patch(':id')
+  @UseGuards(FirebaseAuthGuard)
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updateResumeDto: UpdateResumeDto,
@@ -120,11 +130,13 @@ export class ResumeController {
   }
 
   @Delete(':id')
+  @UseGuards(FirebaseAuthGuard)
   remove(@Param('id', ParseMongoIdPipe) id: string) {
     return this.resumeService.remove(id);
   }
 
   @Post('/upload/file')
+  @UseGuards(FirebaseAuthGuard)
   @UseInterceptors(FileInterceptor('foto', { storage }))
   uploadFile(@UploadedFile() file: Multer.File) {
     return {

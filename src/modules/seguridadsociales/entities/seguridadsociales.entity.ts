@@ -42,6 +42,12 @@ export class Seguridadsociales extends Document {
 
   @Prop({ default: false })
   status: boolean;
+
+  @Prop({ default: 0 })
+  estado_documento: number;
+
+  @Prop()
+  documento: string;
 }
 
 export const SeguridadsocialesSchema =
