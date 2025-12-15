@@ -140,4 +140,9 @@ export class CreateResumeDto {
   @IsOptional()
   @ApiProperty()
   status: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty()
+  disponible: boolean;
 }

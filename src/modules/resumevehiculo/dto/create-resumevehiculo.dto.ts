@@ -185,6 +185,11 @@ export class CreateResumevehiculoDto {
   @ApiProperty()
   status: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty()
+  disponible: boolean;
+
   // Datos propietarios/tenedor/operador
   @IsOptional()
   @IsString()

@@ -6,7 +6,7 @@ import { Documentoscargadosresume } from 'src/modules/documentoscargadosresume/e
 
 export interface ModelExt<T> extends Model<T> {
   delete: (data: { _id: Types.ObjectId }) => void;
-  paginate: (query: any, pagination: any) => void;
+  paginate: (query: any, pagination: any) => any;
 }
 
 export interface Data {

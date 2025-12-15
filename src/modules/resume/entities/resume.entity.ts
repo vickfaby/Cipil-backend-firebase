@@ -132,6 +132,9 @@ export class Resume extends Document {
 
   @Prop()
   status: boolean;
+
+  @Prop({ default: true })
+  disponible: boolean;
 }
 
 export const ResumeSchema = SchemaFactory.createForClass(Resume);

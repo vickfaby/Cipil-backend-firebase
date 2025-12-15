@@ -22,6 +22,7 @@ import { StatesService } from '../states/states.service';
 import { CitiesService } from '../cities/cities.service';
 import { LogimpresionesService } from '../logimpresiones/logimpresiones.service';
 import { Auditoriadocsoperador } from '../auditoriadocsoperador/entities/auditoriadocsoperador.entity';
+import { Posiciondisponible } from '../posicion_disponible/entities/posicion_disponible.entity';
 
 type FirstResumeBasic = {
   _id?: string;
@@ -61,6 +62,8 @@ export class ResumeService {
     private readonly resumeModel: ModelExt<Resume>,
     @InjectModel(Auditoriadocsoperador.name)
     private readonly auditoriaModel: ModelExt<Auditoriadocsoperador>,
+    @InjectModel(Posiciondisponible.name)
+    private readonly posicionDisponibleModel: ModelExt<Posiciondisponible>,
     private readonly seguridadsocialService: SeguridadsocialesService,
     private readonly referenciasService: ReferenciasService,
     private readonly documentoscargadosresumeService: DocumentoscargadosresumeService,
@@ -79,9 +82,14 @@ export class ResumeService {
     }
   }
 
-  findAll(pagination: { limit?: number | string; page?: number | string }) {
+  async findAll(pagination: { limit?: number | string; page?: number | string }) {
     //return this.resumeModel.find({}).select('-__v');
-    return this.resumeModel.paginate({}, pagination);
+    const result = await this.resumeModel.paginate({}, pagination);
+    const docs = await this._attachLastPosition(result.docs);
+    return {
+      ...result,
+      docs,
+    };
   }
 
   async findAllNotByUser(
@@ -128,8 +136,10 @@ export class ResumeService {
         },
       );
 
+      const docsWithPos = await this._attachLastPosition(transformedDocs);
+
       return {
-        docs: transformedDocs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -201,8 +211,10 @@ export class ResumeService {
         },
       );
 
+      const docsWithPos = await this._attachLastPosition(transformedDocs);
+
       return {
-        docs: transformedDocs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -220,7 +232,7 @@ export class ResumeService {
 
   async findOne(id: string) {
     try {
-      return await this.resumeModel
+      const doc = await this.resumeModel
         .findById(id)
         .populate({
           path: 'entidades_seguridad_social',
@@ -241,6 +253,9 @@ export class ResumeService {
               'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento estado_documento _id',
           },
         ]);
+      if (!doc) return null;
+      const [docWithPos] = await this._attachLastPosition([doc]);
+      return docWithPos;
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -344,7 +359,9 @@ export class ResumeService {
         entidades_seguridad_social: entidadesNormalizadas,
         documentos: documentosConAuditoria,
       } as Record<string, unknown>;
-      return resumeWithDocs;
+
+      const [resumeWithPos] = await this._attachLastPosition([resumeWithDocs]);
+      return resumeWithPos;
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -352,17 +369,18 @@ export class ResumeService {
 
   async findByDocument(numero: string) {
     try {
-      return await this.resumeModel
+      const docs = await this.resumeModel
         .find({ numerodocumento: numero })
         .select(
           '-foto -tipodocumento -categoria_id -tipotercero_id -tipopersona -sexo -telefono -direccion -pais -estado -ciudad -ubicacion -fecha_nacimiento -calificacion -progreso -entidades_seguridad_social -referencias -documentos -user_id -_id -status -__v',
         );
+      return this._attachLastPosition(docs);
     } catch (error) {
       this.handleExceptions(error);
     }
   }
 
-  findByUsuarioEmpresa(
+  async findByUsuarioEmpresa(
     usuarioEmpresaId: string,
     pagination: { limit?: number | string; page?: number | string },
   ) {
@@ -373,13 +391,15 @@ export class ResumeService {
           $eq: usuarioEmpresaId,
         },
       };
-      return this.resumeModel.paginate(filter, pagination);
+      const result = await this.resumeModel.paginate(filter, pagination);
+      const docs = await this._attachLastPosition(result.docs);
+      return { ...result, docs };
     } catch (error) {
       this.handleExceptions(error);
     }
   }
 
-  findByUsuarioEmpresaWithSearch(
+  async findByUsuarioEmpresaWithSearch(
     usuarioEmpresaId: string,
     text: string,
     pagination: { limit?: number | string; page?: number | string },
@@ -402,13 +422,15 @@ export class ResumeService {
           }
         : baseFilter;
 
-      return this.resumeModel.paginate(filter, pagination);
+      const result = await this.resumeModel.paginate(filter, pagination);
+      const docs = await this._attachLastPosition(result.docs);
+      return { ...result, docs };
     } catch (error) {
       this.handleExceptions(error);
     }
   }
 
-  findByUsuarioOperador(
+  async findByUsuarioOperador(
     usuarioOperadorId: string,
     pagination: { limit?: number | string; page?: number | string },
   ) {
@@ -419,7 +441,9 @@ export class ResumeService {
           $eq: usuarioOperadorId,
         },
       };
-      return this.resumeModel.paginate(filter, pagination);
+      const result = await this.resumeModel.paginate(filter, pagination);
+      const docs = await this._attachLastPosition(result.docs);
+      return { ...result, docs };
     } catch (error) {
       this.handleExceptions(error);
     }
@@ -539,6 +563,15 @@ export class ResumeService {
     } catch (error) {
       this.handleExceptions(error);
     }
+  }
+
+  async setDisponible(id: string, disponible: boolean) {
+    const resume = await this.resumeModel.findById(id);
+    if (!resume) {
+      throw new BadRequestException('Resume not found');
+    }
+    resume.disponible = disponible;
+    return resume.save();
   }
 
   remove(id: string) {
@@ -801,5 +834,40 @@ export class ResumeService {
     throw new InternalServerErrorException(
       `Can't create Resume - Check server logs`,
     );
+  }
+
+  private async _attachLastPosition(docs: any[]) {
+    if (!docs || docs.length === 0) return docs;
+    const ids = docs.map((d) =>
+      d._id instanceof mongoose.Types.ObjectId
+        ? d._id
+        : new mongoose.Types.ObjectId(d._id),
+    );
+
+    const posiciones = await this.posicionDisponibleModel.aggregate([
+      { $match: { resume_id: { $in: ids } } },
+      { $sort: { fecha_creacion: -1 } },
+      {
+        $group: {
+          _id: '$resume_id',
+          doc: { $first: '$$ROOT' },
+        },
+      },
+    ]);
+
+    const posMap = new Map();
+    posiciones.forEach((p) => {
+      if (p._id) posMap.set(p._id.toString(), p.doc);
+    });
+
+    return docs.map((doc) => {
+      const docObj =
+        doc && typeof doc.toObject === 'function' ? doc.toObject() : doc;
+      const idStr = docObj._id ? docObj._id.toString() : '';
+      return {
+        ...docObj,
+        ultima_posicion: posMap.get(idStr) || null,
+      };
+    });
   }
 }

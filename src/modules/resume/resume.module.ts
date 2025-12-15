@@ -18,6 +18,10 @@ import { CountriesModule } from '../countries/countries.module';
 import { StatesModule } from '../states/states.module';
 import { CitiesModule } from '../cities/cities.module';
 import { LogimpresionesModule } from '../logimpresiones/logimpresiones.module';
+import {
+  Posiciondisponible,
+  PosiciondisponibleSchema,
+} from '../posicion_disponible/entities/posicion_disponible.entity';
 
 @Module({
   controllers: [ResumeController],
@@ -31,6 +35,10 @@ import { LogimpresionesModule } from '../logimpresiones/logimpresiones.module';
       {
         name: Auditoriadocsoperador.name,
         schema: AuditoriadocsoperadorSchema,
+      },
+      {
+        name: Posiciondisponible.name,
+        schema: PosiciondisponibleSchema,
       },
     ]),
     ReferenciasModule,

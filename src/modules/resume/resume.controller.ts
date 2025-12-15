@@ -13,8 +13,9 @@ import {
   NotFoundException,
   Query,
   UseGuards,
+  Put,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
@@ -39,6 +40,29 @@ export class ResumeController {
   @UseGuards(FirebaseAuthGuard)
   create(@Body() createResumeDto: CreateResumeDto) {
     return this.resumeService.create(createResumeDto);
+  }
+
+  @Put(':id/disponible')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiOperation({ summary: 'Actualizar la disponibilidad de un Resume' })
+  @ApiParam({ name: 'id', description: 'ID del resume' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        disponible: {
+          type: 'boolean',
+          description: 'Nuevo estado de disponibilidad',
+        },
+      },
+      required: ['disponible'],
+    },
+  })
+  setDisponible(
+    @Param('id', ParseMongoIdPipe) id: string,
+    @Body('disponible') disponible: boolean,
+  ) {
+    return this.resumeService.setDisponible(id, disponible);
   }
 
   @Get()

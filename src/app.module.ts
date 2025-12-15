@@ -55,6 +55,7 @@ import {
   SexoModule,
   AuditoriadocsoperadorModule,
   AuditoriadocsvehiculoModule,
+  PosiciondisponibleModule,
 } from './modules';
 
 @Module({
@@ -128,6 +129,7 @@ import {
     SexoModule,
     AuditoriadocsoperadorModule,
     AuditoriadocsvehiculoModule,
+    PosiciondisponibleModule,
   ],
   controllers: [AppController, ProfileController],
   providers: [AppService, EventsGateway, FirebaseService],

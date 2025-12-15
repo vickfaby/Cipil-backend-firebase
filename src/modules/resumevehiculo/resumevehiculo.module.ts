@@ -25,6 +25,10 @@ import {
   Auditoriadocsvehiculo,
   AuditoriadocsvehiculoSchema,
 } from '../auditoriadocsvehiculo/entities/auditoriadocsvehiculo.entity';
+import {
+  Posiciondisponible,
+  PosiciondisponibleSchema,
+} from '../posicion_disponible/entities/posicion_disponible.entity';
 
 @Module({
   controllers: [ResumevehiculoController],
@@ -46,6 +50,13 @@ import {
         useFactory: () => {
           const schema = AuditoriadocsvehiculoSchema;
           schema.plugin(mongoose_paginate);
+          return schema;
+        },
+      },
+      {
+        name: Posiciondisponible.name,
+        useFactory: () => {
+          const schema = PosiciondisponibleSchema;
           return schema;
         },
       },

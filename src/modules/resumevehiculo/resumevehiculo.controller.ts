@@ -13,8 +13,9 @@ import {
   NotFoundException,
   Query,
   UseGuards,
+  Put,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
@@ -39,6 +40,28 @@ export class ResumevehiculoController {
   @Post()
   create(@Body() createResumevehiculoDto: CreateResumevehiculoDto) {
     return this.resumevehiculoService.create(createResumevehiculoDto);
+  }
+
+  @Put(':id/disponible')
+  @ApiOperation({ summary: 'Actualizar la disponibilidad de un vehículo' })
+  @ApiParam({ name: 'id', description: 'ID del vehículo' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        disponible: {
+          type: 'boolean',
+          description: 'Nuevo estado de disponibilidad',
+        },
+      },
+      required: ['disponible'],
+    },
+  })
+  setDisponible(
+    @Param('id', ParseMongoIdPipe) id: string,
+    @Body('disponible') disponible: boolean,
+  ) {
+    return this.resumevehiculoService.setDisponible(id, disponible);
   }
 
   @Get()

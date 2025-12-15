@@ -28,6 +28,7 @@ import { TipovehiculosService } from '../tipovehiculos/tipovehiculos.service';
 import { Auditoriadocsvehiculo } from '../auditoriadocsvehiculo/entities/auditoriadocsvehiculo.entity';
 import { UpdateDocumentoscargadosvehiculoDto } from '../documentoscargadosvehiculo/dto/update-documentoscargadosvehiculo.dto';
 import { UpdateDocumentoscargadosengancheDto } from '../documentoscargadosenganche/dto/update-documentoscargadosenganche.dto';
+import { Posiciondisponible } from '../posicion_disponible/entities/posicion_disponible.entity';
 
 @Injectable()
 export class ResumevehiculoService {
@@ -37,6 +38,8 @@ export class ResumevehiculoService {
     private readonly resumevehiculoModel: ModelExt<Resumevehiculo>,
     @InjectModel(Auditoriadocsvehiculo.name)
     private readonly auditoriaVehiculoModel: ModelExt<Auditoriadocsvehiculo>,
+    @InjectModel(Posiciondisponible.name)
+    private readonly posicionDisponibleModel: ModelExt<Posiciondisponible>,
     private readonly documentoscargadosresumevehicluloService: DocumentoscargadosvehiculoService,
     private readonly documentoscargadosengancheService: DocumentoscargadosengancheService,
     private readonly logImpresionesModel: LogimpresionesService,
@@ -95,8 +98,10 @@ export class ResumevehiculoService {
     ]);
 
     const totalPages = Math.ceil(totalDocs / limit) || 1;
+    const docsWithPos = await this._attachLastPosition(docs);
+
     return {
-      docs,
+      docs: docsWithPos,
       totalDocs,
       limit,
       totalPages,
@@ -161,8 +166,10 @@ export class ResumevehiculoService {
         },
       );
 
+      const docsWithPos = await this._attachLastPosition(transformedDocs);
+
       return {
-        docs: transformedDocs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -239,8 +246,10 @@ export class ResumevehiculoService {
         },
       );
 
+      const docsWithPos = await this._attachLastPosition(transformedDocs);
+
       return {
-        docs: transformedDocs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -308,7 +317,8 @@ export class ResumevehiculoService {
         resumevehiculo.documentosvehiculo = documentosConAuditoria;
       }
 
-      return resumevehiculo as any;
+      const [resumeWithPos] = await this._attachLastPosition([resumevehiculo]);
+      return resumeWithPos as any;
     } catch (error) {
       this.handleExceptions(error);
       return null;
@@ -344,8 +354,9 @@ export class ResumevehiculoService {
       ]);
 
       const totalPages = Math.ceil(totalDocs / limit) || 1;
+      const docsWithPos = await this._attachLastPosition(docs);
       return {
-        docs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -399,8 +410,9 @@ export class ResumevehiculoService {
       ]);
 
       const totalPages = Math.ceil(totalDocs / limit) || 1;
+      const docsWithPos = await this._attachLastPosition(docs);
       return {
-        docs,
+        docs: docsWithPos,
         totalDocs,
         limit,
         totalPages,
@@ -416,9 +428,9 @@ export class ResumevehiculoService {
     }
   }
 
-  async findByVehicule(vehiculo: string): Promise<Resumevehiculo[]> {
+  async findByVehicule(vehiculo: string): Promise<any[]> {
     try {
-      return await this.resumevehiculoModel
+      const docs = await this.resumevehiculoModel
         .find({
           resumevehiculo_id: vehiculo,
         })
@@ -438,6 +450,7 @@ export class ResumevehiculoService {
             select: 'nombre_entidad _id',
           },
         ]);
+      return this._attachLastPosition(docs);
     } catch (error) {
       this.handleExceptions(error);
       return [];
@@ -557,6 +570,15 @@ export class ResumevehiculoService {
       console.error('Error en update service:', error);
       this.handleExceptions(error);
     }
+  }
+
+  async setDisponible(id: string, disponible: boolean) {
+    const resumevehiculo = await this.resumevehiculoModel.findById(id);
+    if (!resumevehiculo) {
+      throw new BadRequestException('Vehículo no encontrado');
+    }
+    resumevehiculo.disponible = disponible;
+    return resumevehiculo.save();
   }
 
   remove(id: string) {
@@ -748,5 +770,40 @@ export class ResumevehiculoService {
     throw new InternalServerErrorException(
       `Can't create Resume vehiculo - Check server logs`,
     );
+  }
+
+  private async _attachLastPosition(docs: any[]) {
+    if (!docs || docs.length === 0) return docs;
+    const ids = docs.map((d) =>
+      d._id instanceof mongoose.Types.ObjectId
+        ? d._id
+        : new mongoose.Types.ObjectId(d._id),
+    );
+
+    const posiciones = await this.posicionDisponibleModel.aggregate([
+      { $match: { resumevehiculo_id: { $in: ids } } },
+      { $sort: { fecha_creacion: -1 } },
+      {
+        $group: {
+          _id: '$resumevehiculo_id',
+          doc: { $first: '$$ROOT' },
+        },
+      },
+    ]);
+
+    const posMap = new Map();
+    posiciones.forEach((p) => {
+      if (p._id) posMap.set(p._id.toString(), p.doc);
+    });
+
+    return docs.map((doc) => {
+      const docObj =
+        doc && typeof doc.toObject === 'function' ? doc.toObject() : doc;
+      const idStr = docObj._id ? docObj._id.toString() : '';
+      return {
+        ...docObj,
+        ultima_posicion: posMap.get(idStr) || null,
+      };
+    });
   }
 }
