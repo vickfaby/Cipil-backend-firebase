@@ -286,6 +286,44 @@ export class UsuariosController {
     return this.usuariosService.remove(id);
   }
 
+  @Patch('update-user-data/:id')
+  @ApiOperation({
+    summary: 'Actualizar datos de un usuario por ID (Admin)',
+    description: 'Permite actualizar la información de un usuario específico mediante su ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del usuario a actualizar',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiBody({
+    type: UpdateUsuariosDto,
+    description: 'Datos a actualizar del usuario',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario actualizado exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Usuario actualizado exitosamente' },
+        data: { type: 'object' },
+      },
+    },
+  })
+  async updateUserData(
+    @Param('id', ParseMongoIdPipe) id: string,
+    @Body() updateUsuariosDto: UpdateUsuariosDto,
+  ) {
+    const updatedUser = await this.usuariosService.update(id, updateUsuariosDto);
+    return {
+      success: true,
+      message: 'Usuario actualizado exitosamente',
+      data: updatedUser,
+    };
+  }
+
   @Get('me')
   @ApiOperation({
     summary: 'Obtener perfil del usuario actual',

@@ -61,6 +61,14 @@ export class Usuarios extends Document {
   @Prop()
   @ApiProperty()
   hashwallet: string;
+
+  @Prop()
+  @ApiProperty()
+  telefono: string;
+
+  @Prop()
+  @ApiProperty()
+  calificacion: string;
 }
 
 export const UsuariosSchema = SchemaFactory.createForClass(Usuarios);
