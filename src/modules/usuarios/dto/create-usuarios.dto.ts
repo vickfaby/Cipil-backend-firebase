@@ -63,4 +63,22 @@ export class CreateUsuariosDto {
   @IsOptional()
   @ApiProperty()
   hashwallet: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Número de teléfono del usuario',
+    example: '+57 3001234567',
+    required: false,
+  })
+  telefono: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Calificación del usuario',
+    example: '5.0',
+    required: false,
+  })
+  calificacion: string;
 }
