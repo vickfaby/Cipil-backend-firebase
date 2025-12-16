@@ -73,10 +73,18 @@ export class Usuarios extends Document {
 
 export const UsuariosSchema = SchemaFactory.createForClass(Usuarios);
 
-UsuariosSchema.methods.toJSON = function () {
+UsuariosSchema.methods.toJSON = function (this: Usuarios) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { __v, password, ...usuario } = this.toObject();
-  return usuario;
+  const { __v, password, ...usuario } = this.toObject() as Record<
+    string,
+    unknown
+  >;
+  // Asegurar que telefono y calificacion siempre estén presentes
+  return {
+    ...usuario,
+    telefono: usuario.telefono ?? null,
+    calificacion: usuario.calificacion ?? null,
+  } as Record<string, unknown>;
 };
 
 // UsuariosSchema.post('save', function (error: any, doc: any, next: any) {
