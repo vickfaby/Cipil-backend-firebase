@@ -158,9 +158,6 @@ export class Resumevehiculo extends Document {
   @Prop({ default: false })
   status: boolean;
 
-  @Prop({ default: true })
-  disponible: boolean;
-
   // Datos propietarios/tenedor/operador
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

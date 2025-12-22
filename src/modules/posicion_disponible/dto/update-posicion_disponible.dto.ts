@@ -5,3 +5,5 @@ export class UpdatePosiciondisponibleDto extends PartialType(
   CreatePosiciondisponibleDto,
 ) {}
 
+
+
