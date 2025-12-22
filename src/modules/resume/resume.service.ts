@@ -534,7 +534,9 @@ export class ResumeService {
         }
       });
 
-      await resume.updateOne(updateData);
+      // `resume` proviene de `findOne()` que usa `_attachLastPosition()` y retorna un objeto plano,
+      // por lo que no tiene métodos de documento Mongoose (p.ej. `updateOne`).
+      await this.resumeModel.updateOne({ _id: id }, updateData);
 
       // Consultar el resume actualizado con todos los populates
       const updatedResume = await this.resumeModel
