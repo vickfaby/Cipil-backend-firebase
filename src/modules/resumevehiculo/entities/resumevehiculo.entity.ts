@@ -98,8 +98,6 @@ export class Resumevehiculo extends Document {
   @Prop()
   operador_id: string;
 
-  
-
   @Prop()
   tipo_servicio: string;
 
@@ -197,7 +195,9 @@ export class Resumevehiculo extends Document {
 
   @Prop()
   email_operador: string;
-
+  @Prop({ required: false })
+  
+  disponible: boolean;
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'LigarVehiculo',
