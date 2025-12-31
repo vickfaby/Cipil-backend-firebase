@@ -22,5 +22,3 @@ export class CreatePosiciondisponibleDto {
   resumevehiculo_id: string;
 }
 
-
-
