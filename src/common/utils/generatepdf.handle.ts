@@ -53,22 +53,32 @@ export const generatePDF = async (data: any) => {
     args: ['--disable-setuid-sandbox', '--no-sandbox'],
   });
   const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+
+  // Configurar viewport para A4 (794x1122 a 96 DPI con deviceScaleFactor: 2)
+  await page.setViewport({ width: 794, height: 1122, deviceScaleFactor: 2 });
+
   await page.goto(`data:text/html;charset=UTF-8,${html}`, {
     waitUntil: 'networkidle2',
   });
   await page.emulateMediaType('screen');
+
   const pdfBuffer = await page.pdf({
-    width: '1024px',
-    headerTemplate: hpdf,
-    footerTemplate:
-      '<div id="footer-template" style="font-size:10px!important; font-family: sans-serif; color: rgb(0, 0, 0); padding-left:30px;">http://www.cipil.com.co – Central de Información @ Todos los derechos reservados. info@cipil.com.co - +57-3124326197 &nbsp;&nbsp;&nbsp; -- Pag&nbsp;<span class="pageNumber"></span>&nbsp;de&nbsp;<span class="totalPages"></span></div>',
-    displayHeaderFooter: true,
-    format: 'LETTER',
-    margin: { left: '1cm', top: '2.7cm', right: '1cm', bottom: '1.2cm' },
+    format: 'A4',
+    margin: {
+      top: '0px',
+      right: '0px',
+      bottom: '0px',
+      left: '0px',
+    },
     printBackground: true,
-    //path: path.join('pdf', `${milis}.pdf`) //guarda el pdf en un folder
+    // Header y footer temporalmente comentados - se moverán al template Handlebars
+    // headerTemplate: hpdf,
+    // footerTemplate:
+    //   '<div id="footer-template" style="font-size:10px!important; font-family: sans-serif; color: rgb(0, 0, 0); padding-left:30px;">http://www.cipil.com.co – Central de Información @ Todos los derechos reservados. info@cipil.com.co - +57-3124326197 &nbsp;&nbsp;&nbsp; -- Pag&nbsp;<span class="pageNumber"></span>&nbsp;de&nbsp;<span class="totalPages"></span></div>',
+    // displayHeaderFooter: true,
+    // path: path.join('pdf', `${milis}.pdf`) //guarda el pdf en un folder
   });
+
   await browser.close();
   return pdfBuffer;
 };

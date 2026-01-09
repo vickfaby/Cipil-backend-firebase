@@ -696,12 +696,15 @@ export class ResumeService {
           encoding: 'base64',
         },
       );
+      const fechaVencimientoDate = new Date(d.fecha_vencimiento ?? 0);
+      const isExpired = fechaVencimientoDate.getTime() < Date.now();
       const out: {
         documento: string;
         grupodocumento_id?: unknown;
         documento_id?: unknown;
         fecha_expedicion: string;
         fecha_vencimiento: string;
+        is_expired: boolean;
         categoria: string;
         codigo_referencia: string;
         entidad_emisora?: unknown;
@@ -718,7 +721,8 @@ export class ResumeService {
         fecha_vencimiento: new Intl.DateTimeFormat('es-ES', {
           dateStyle: 'short',
           timeStyle: 'short',
-        }).format(new Date(d.fecha_vencimiento ?? 0)),
+        }).format(fechaVencimientoDate),
+        is_expired: isExpired,
         categoria: d.categoria ?? '',
         codigo_referencia: d.codigo_referencia ?? '',
         entidad_emisora: d.entidad_emisora as unknown,
