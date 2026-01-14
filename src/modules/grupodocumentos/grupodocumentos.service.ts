@@ -30,12 +30,12 @@ export class GrupodocumentosService {
   }
 
   async findAll() {
-    return this.grupodocumentosModel.find({}).select('-__v');
+    return this.grupodocumentosModel.find({}).populate('documentos');
   }
 
   async findOne(id: string) {
     try {
-      return await this.grupodocumentosModel.findById(id);
+      return await this.grupodocumentosModel.findById(id).populate('documentos');
     } catch (error) {
       this.handleExceptions(error);
     }

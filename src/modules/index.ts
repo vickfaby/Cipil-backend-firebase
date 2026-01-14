@@ -60,4 +60,3 @@ export { PlacaenganchesModule } from './placaenganches/placaenganches.module';
 export { TipocarroceriasModule } from './tipocarrocerias/tipocarrocerias.module';
 export { TipovehiculosModule } from './tipovehiculos/tipovehiculos.module';
 export { PosiciondisponibleModule } from './posicion_disponible/posicion_disponible.module';
-

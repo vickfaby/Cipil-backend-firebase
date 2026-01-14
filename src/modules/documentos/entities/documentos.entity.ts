@@ -12,6 +12,13 @@ export class Documentos extends Document {
 
   @Prop()
   nombre_documento: string;
+
+  @Prop()
+  descripcion_documento: string;
+
+  @Prop()
+  tipo_documento: string;
+  
 }
 
 export const DocumentosSchema = SchemaFactory.createForClass(Documentos);
