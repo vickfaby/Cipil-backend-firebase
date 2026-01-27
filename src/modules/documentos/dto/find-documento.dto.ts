@@ -6,7 +6,6 @@ export class FindDocumentoDto {
   @IsOptional()
   @ApiProperty()
   grupodocumento: string;
-  grupodocumento_id: string;
   @IsString()
   @IsOptional()
   @ApiProperty()
