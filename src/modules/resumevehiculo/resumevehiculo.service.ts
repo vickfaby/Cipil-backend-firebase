@@ -18,6 +18,8 @@ import { GetResumeVehiculoPDFDto } from './dto/get-resume-pdf.dto';
 import { LogimpresionesService } from '../logimpresiones/logimpresiones.service';
 import { generatePDF } from 'src/common/utils/generatepdf.handle';
 import { PlacaenganchesService } from '../placaenganches/placaenganches.service';
+import { Placaenganches } from '../placaenganches/entities/placaenganches.entity';
+import { CreatePlacaenganchesDto } from '../placaenganches/dto/create-placaenganches.dto';
 import { ClasesvehiculosService } from '../clasesvehiculos/clasesvehiculos.service';
 import { AnosvehiculosService } from '../anosvehiculos/anosvehiculos.service';
 import { EmpresagpsService } from '../empresagps/empresagps.service';
@@ -55,8 +57,67 @@ export class ResumevehiculoService {
   async create(createResumevehiculoDto: CreateResumevehiculoDto) {
     console.log('create data', createResumevehiculoDto);
     try {
+      // Verificar si el tipo de vehículo es ARTICULADO y si viene el objeto enganche
+      if (createResumevehiculoDto.enganche) {
+        const tipovehiculo = await this.tipovehiculosService.findOne(
+          createResumevehiculoDto.tipovehiculo_id,
+        );
+
+        if (tipovehiculo && tipovehiculo.nombre_tipovehiculo?.toUpperCase() === 'ARTICULADO') {
+          // Crear o actualizar el enganche
+          const engancheData: CreatePlacaenganchesDto = {
+            marca_id: createResumevehiculoDto.enganche.marca_id,
+            modelo: createResumevehiculoDto.enganche.modelo,
+            numero_serie: createResumevehiculoDto.enganche.numero_serie,
+            color_id: createResumevehiculoDto.enganche.color_id,
+            tipocarroceria_id: createResumevehiculoDto.enganche.tipocarroceria_id,
+            placa: createResumevehiculoDto.enganche.placa,
+            peso: createResumevehiculoDto.enganche.peso,
+            capacidad: createResumevehiculoDto.enganche.capacidad ?? 0,
+            configuracionvehicular: createResumevehiculoDto.enganche.configuracionvehicular ?? '',
+            foto: createResumevehiculoDto.enganche.foto ?? '',
+            propietario_id: createResumevehiculoDto.propietario_id,
+            tenedor_id: createResumevehiculoDto.tenedor_id,
+            user_id: createResumevehiculoDto.user_id,
+            numero_plaqueta: createResumevehiculoDto.enganche.numero_plaqueta,
+            largo: createResumevehiculoDto.enganche.largo,
+            ancho: createResumevehiculoDto.enganche.ancho,
+            alto: createResumevehiculoDto.enganche.alto,
+            s1: createResumevehiculoDto.enganche.s1,
+            s2: createResumevehiculoDto.enganche.s2,
+            s3: createResumevehiculoDto.enganche.s3,
+            s4: createResumevehiculoDto.enganche.s4,
+          };
+
+          // Verificar si ya existe un enganche con esa placa
+          const engancheExistente = await this.placaenganchesModel.findByPlaca(
+            createResumevehiculoDto.enganche.placa,
+          );
+
+          if (engancheExistente && engancheExistente.length > 0) {
+            // Actualizar enganche existente
+            const enganche = engancheExistente[0] as any;
+            const engancheId = enganche._id ? String(enganche._id) : enganche.id;
+            await this.placaenganchesModel.update(
+              engancheId,
+              engancheData,
+            );
+          } else {
+            // Crear nuevo enganche
+            await this.placaenganchesModel.create(engancheData);
+          }
+
+          // Asignar la placa_enganche al resumevehiculo
+          createResumevehiculoDto.placa_enganche = createResumevehiculoDto.enganche.placa;
+        }
+      }
+
+      // Remover el objeto enganche del DTO antes de crear el resumevehiculo
+      // ya que no es un campo de la entidad Resumevehiculo
+      const { enganche, ...resumevehiculoData } = createResumevehiculoDto;
+
       const resumevehiculo = await this.resumevehiculoModel.create(
-        createResumevehiculoDto,
+        resumevehiculoData,
       );
       return resumevehiculo;
     } catch (error) {

@@ -36,7 +36,31 @@ export class Placaenganches extends Document {
   numero_serie: string;
 
   @Prop()
+  numero_plaqueta: string;
+
+  @Prop()
   peso: number;
+
+  @Prop()
+  largo: number;
+
+  @Prop()
+  ancho: number;
+
+  @Prop()
+  alto: number;
+
+  @Prop()
+  s1: string;
+
+  @Prop()
+  s2: string;
+
+  @Prop()
+  s3: string;
+
+  @Prop()
+  s4: string;
 
   @Prop({ unique: true })
   placa: string;

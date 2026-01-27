@@ -15,6 +15,7 @@ import {
   UseGuards,
   Put,
 } from '@nestjs/common';
+import { CleanEngancheInterceptor } from './interceptors/clean-enganche.interceptor';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { createReadStream, existsSync, statSync } from 'fs';
@@ -38,6 +39,7 @@ export class ResumevehiculoController {
   constructor(private readonly resumevehiculoService: ResumevehiculoService) {}
 
   @Post()
+  @UseInterceptors(CleanEngancheInterceptor)
   create(@Body() createResumevehiculoDto: CreateResumevehiculoDto) {
     return this.resumevehiculoService.create(createResumevehiculoDto);
   }

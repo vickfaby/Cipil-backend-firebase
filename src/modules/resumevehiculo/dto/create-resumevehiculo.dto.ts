@@ -1,14 +1,108 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { CreateDocumentoscargadosengancheDto } from 'src/modules/documentoscargadosenganche/dto/create-documentoscargadosenganche.dto';
 import { CreateDocumentoscargadosvehiculoDto } from 'src/modules/documentoscargadosvehiculo/dto/create-documentoscargadosvehiculo.dto';
+
+export class CreateEngancheDto {
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'ID de la marca del enganche' })
+  marca_id: string;
+
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'Modelo del enganche' })
+  modelo: string;
+
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'Número de serie del enganche' })
+  numero_serie: string;
+
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'ID del color del enganche' })
+  color_id: string;
+
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'ID del tipo de carrocería (Cama baja, Botellero, Cama alta)' })
+  tipocarroceria_id: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Número de plaqueta del enganche', required: false })
+  numero_plaqueta?: string;
+
+  @IsString()
+  @MinLength(1)
+  @ApiProperty({ description: 'Placa del enganche' })
+  placa: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({ description: 'Largo del enganche en metros', required: false })
+  largo?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({ description: 'Ancho del enganche en metros', required: false })
+  ancho?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({ description: 'Alto del enganche en metros', required: false })
+  alto?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Configuración de ejes - Eje s1', required: false })
+  s1?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Configuración de ejes - Eje s2', required: false })
+  s2?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Configuración de ejes - Eje s3', required: false })
+  s3?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Configuración de ejes - Eje s4', required: false })
+  s4?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'Configuración vehicular del enganche', required: false })
+  configuracionvehicular?: string;
+
+  @IsNumber()
+  @ApiProperty({ description: 'Peso del enganche en kg' })
+  peso: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({ description: 'Capacidad del enganche', required: false })
+  capacidad?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'URL o path de la foto del enganche', required: false })
+  foto?: string;
+}
 
 export class CreateResumevehiculoDto {
   @IsOptional()
@@ -17,7 +111,15 @@ export class CreateResumevehiculoDto {
   __v: string;
 
   @IsOptional()
-  enganche?: string[];
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CreateEngancheDto)
+  @ApiProperty({ 
+    description: 'Datos del enganche (requerido cuando tipo de vehículo es ARTICULADO). Debe enviarse como objeto anidado, NO con prefijos enganche_', 
+    required: false,
+    type: CreateEngancheDto
+  })
+  enganche?: CreateEngancheDto;
 
   @IsArray()
   @ApiProperty()

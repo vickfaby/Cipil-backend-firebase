@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, MinLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreatePlacaenganchesDto {
   @IsNumber()
@@ -35,9 +35,49 @@ export class CreatePlacaenganchesDto {
   @ApiProperty()
   numero_serie: string;
 
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  numero_plaqueta?: string;
+
   @IsNumber()
   @ApiProperty()
   peso: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  largo?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  ancho?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  alto?: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  s1?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  s2?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  s3?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  s4?: string;
 
   @IsString()
   @ApiProperty()
