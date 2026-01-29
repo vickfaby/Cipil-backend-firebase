@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsOptional,
   IsString,
@@ -41,4 +42,14 @@ export class RegisterAuthDto {
   @IsOptional()
   @ApiProperty()
   hashwallet: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty()
+  aceptarMayorEdad: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty()
+  aceptarTratamientoDatos: boolean;
 }

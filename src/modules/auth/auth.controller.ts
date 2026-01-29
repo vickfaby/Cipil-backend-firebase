@@ -67,6 +67,8 @@ export class AuthController {
     description: 'Error interno del servidor' 
   })
   handleRegister(@Body() registerDto: RegisterAuthDto) {
+    Logger.log('🔥 Registro de usuario');
+    Logger.log( {registerDto});
     return this.authService.register(registerDto);
   }
 
