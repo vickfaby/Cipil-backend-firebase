@@ -378,7 +378,67 @@ export class ResumevehiculoService {
         resumevehiculo.documentosvehiculo = documentosConAuditoria;
       }
 
-      const [resumeWithPos] = await this._attachLastPosition([resumevehiculo]);
+      // Enriquecer placas_enganche con datos completos del enganche
+      // y eliminar dataenganches y enganches
+      const resumevehiculoObj = resumevehiculo as any;
+      
+      // Obtener placas de enganche (puede ser string o array)
+      let placasEnganche: string[] = [];
+      if (resumevehiculoObj.placas_enganche && Array.isArray(resumevehiculoObj.placas_enganche)) {
+        placasEnganche = resumevehiculoObj.placas_enganche;
+      } else if (resumevehiculoObj.placa_enganche) {
+        placasEnganche = [resumevehiculoObj.placa_enganche];
+      }
+      
+      if (placasEnganche && placasEnganche.length > 0) {
+        // Buscar todos los enganches asociados a estas placas
+        const enganchesCompletos = await Promise.all(
+          placasEnganche.map(async (placa: string) => {
+            if (!placa) return null;
+            
+            const enganche = await this.placaenganchesModel.findByPlaca(placa);
+            if (enganche && enganche.length > 0) {
+              const engancheData = enganche[0] as any;
+              
+              // Buscar documentos del enganche
+              const documentosEnganche = await this.documentoscargadosengancheService.findByResumeVehicle(placa);
+              
+              return {
+                capacidad: engancheData.capacidad,
+                color_id: engancheData.color_id,
+                configuracionvehicular: engancheData.configuracionvehicular,
+                foto: engancheData.foto || '',
+                marca_id: engancheData.marca_id,
+                modelo: engancheData.modelo,
+                numero_serie: engancheData.numero_serie,
+                numero_plaqueta: engancheData.numero_plaqueta || '',
+                peso: engancheData.peso,
+                placa: engancheData.placa,
+                propietario_id: engancheData.propietario_id,
+                tenedor_id: engancheData.tenedor_id,
+                tipocarroceria_id: engancheData.tipocarroceria_id,
+                largo: engancheData.largo,
+                ancho: engancheData.ancho,
+                alto: engancheData.alto,
+                documentos: documentosEnganche || [],
+                documentosenganche: documentosEnganche || [],
+              };
+            }
+            return null;
+          })
+        );
+        
+        // Filtrar nulls y asignar al campo placas_enganche
+        resumevehiculoObj.placas_enganche = enganchesCompletos.filter(e => e !== null);
+      } else {
+        resumevehiculoObj.placas_enganche = [];
+      }
+      
+      // Eliminar dataenganches y enganches si existen
+      delete resumevehiculoObj.dataenganches;
+      delete resumevehiculoObj.enganches;
+
+      const [resumeWithPos] = await this._attachLastPosition([resumevehiculoObj]);
       return resumeWithPos as any;
     } catch (error) {
       this.handleExceptions(error);
