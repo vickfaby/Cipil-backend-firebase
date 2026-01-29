@@ -204,20 +204,113 @@ export class CreateResumevehiculoDto {
   @ApiProperty()
   capacidad: string;
 
+  // Datos propietario
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
-  propietario_id: string;
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_id?: string;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
-  tenedor_id: string;
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_nombre?: string;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
-  operador_id: string;
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_apellido?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_telefono?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_email?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_numdocumento?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  propietario_tipodocumento?: string;
+
+  // Datos tenedor
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_id?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_nombre?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_apellido?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_telefono?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_email?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_numdocumento?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  tenedor_tipodocumento?: string;
+
+  // Datos operador
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_id?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_nombre?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_apellido?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_telefono?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_email?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_numdocumento?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  operador_tipodocumento?: string;
 
   @IsString()
   @MinLength(1)

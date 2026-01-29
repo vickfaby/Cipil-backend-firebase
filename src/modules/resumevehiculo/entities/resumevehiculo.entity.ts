@@ -91,13 +91,48 @@ export class Resumevehiculo extends Document {
 
   @Prop()
   propietario_id: string;
-
+  @Prop()
+  propietario_nombre: string;
+  @Prop()
+  propietario_apellido: string;
+  @Prop()
+  propietario_telefono: string;
+  @Prop()
+  propietario_email: string;
+  @Prop()
+  propietario_numdocumento: string;
+  @Prop()
+  propietario_tipodocumento: string;
+  
   @Prop()
   tenedor_id: string;
-
+  @Prop()
+  tenedor_nombre: string;
+  @Prop()
+  tenedor_apellido: string;
+  @Prop()
+  tenedor_telefono: string;
+  @Prop()
+  tenedor_email: string;
+  @Prop()
+  tenedor_numdocumento: string;
+  @Prop()
+  tenedor_tipodocumento: string;
+  
   @Prop()
   operador_id: string;
-
+  @Prop()
+  operador_nombre: string;
+  @Prop()
+  operador_apellido: string;
+  @Prop()
+  operador_telefono: string;
+  @Prop()
+  operador_email: string;
+  @Prop()
+  operador_numdocumento: string;
+  @Prop()
+  operador_tipodocumento: string;
   
 
   @Prop()
@@ -123,6 +158,7 @@ export class Resumevehiculo extends Document {
 
   @Prop()
   calificacion: string;
+
 
   @Prop()
   ruta_frecuente: string;

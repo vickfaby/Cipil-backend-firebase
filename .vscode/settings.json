@@ -4,13 +4,21 @@
         "clasevehiculo",
         "configuracionvehicular",
         "Documentoscargadosvehiculo",
+        "documentosvehiculo",
         "entidademisora",
         "hashwallet",
         "ligarvehiculo",
         "Marcasvehiculo",
         "marcasvehiculos",
+        "numdoc",
+        "numdocumento",
         "resumevehiculo",
         "Rferencia",
-        "tipocarroceria"
+        "Streamable",
+        "telefono",
+        "tipocarroceria",
+        "tipodocumento",
+        "typepdf",
+        "vehiculo"
     ]
 }
