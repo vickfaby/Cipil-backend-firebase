@@ -1,7 +1,7 @@
-//import { diskStorage } from 'multer';
-// Compat CJS/ESM: sharp-multer puede exportar default o función CJS
+import { diskStorage } from 'multer';
 import { existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { extname, join } from 'path';
+// Compat CJS/ESM: sharp-multer puede exportar default o función CJS
 import * as SharpMulterNS from 'sharp-multer';
 const SharpMulter: any = (SharpMulterNS as any)?.default ?? (SharpMulterNS as any);
 
@@ -35,4 +35,15 @@ export const storage = SharpMulter({
     //resize: { width: 400, height: 800, resizeMode: 'contain' },
   },
   filename: newFilenameFunction,
+});
+
+export const storageFile = diskStorage({
+  destination: (_req, _file, cb) => {
+    ensureUploadDirExists();
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const name = `${Date.now()}${extname(file.originalname)}`;
+    cb(null, name);
+  },
 });

@@ -9,9 +9,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   Res,
   NotFoundException,
-  Logger,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -21,7 +21,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import type { Multer } from 'multer';
 import { existsSync } from 'fs';
@@ -32,7 +32,7 @@ import { CreateSeguridadsocialeDto } from './dto/create-seguridadsociale.dto';
 import { UpdateSeguridadsocialeDto } from './dto/update-seguridadsociale.dto';
 import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id.pipe';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
-import { storage } from 'src/common/utils/media.handle';
+import { storage, storageFile } from 'src/common/utils/media.handle';
 
 @ApiTags('Seguridad Social')
 @Controller('seguridadsociales')
@@ -58,6 +58,50 @@ export class SeguridadsocialesController {
   @UseGuards(FirebaseAuthGuard)
   findAll() {
     return this.seguridadsocialesService.findAll();
+  }
+
+  @Post('/upload/file')
+  @UseGuards(FirebaseAuthGuard)
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'file', maxCount: 1 },
+        { name: 'documento', maxCount: 1 },
+      ],
+      { storage: storageFile },
+    ),
+  )
+  uploadFile(
+    @UploadedFiles()
+    files: { file?: Multer.File[]; documento?: Multer.File[] },
+  ) {
+    const file = files.file?.[0] ?? files.documento?.[0];
+    if (!file) {
+      throw new BadRequestException(
+        'Debe enviar un archivo con el campo "file" o "documento"',
+      );
+    }
+    return {
+      message: 'upload file successfully',
+      filename: file.filename,
+    };
+  }
+
+  @Get('/upload/file/:filename')
+  @UseGuards(FirebaseAuthGuard)
+  getUploadedFile(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ): void {
+    const isValidName = /^[A-Za-z0-9_.-]+$/.test(filename);
+    if (!isValidName) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+    const filePath = join(process.cwd(), 'public', 'uploads', filename);
+    if (!existsSync(filePath)) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+    res.sendFile(filePath);
   }
 
   @Get(':id')
@@ -127,28 +171,17 @@ export class SeguridadsocialesController {
     return this.seguridadsocialesService.remove(id);
   }
 
-  @Post('/upload/file')
-  @UseGuards(FirebaseAuthGuard)
-  @UseInterceptors(FileInterceptor('documento', { storage }))
-  uploadFile(@UploadedFile() file: Multer.File) {
-    return {
-      message: 'upload file successfully',
-      documento: file.filename,
-    };
-  }
-
   @Get('/view/:filename')
-  viewFile(@Param('filename') filename: string, @Res() res: Response) {
-    const logger = new Logger('Seguridadsociales');
-    // Construir la ruta del archivo
+  @UseGuards(FirebaseAuthGuard)
+  viewFile(@Param('filename') filename: string, @Res() res: Response): void {
+    const isValidName = /^[A-Za-z0-9_.-]+$/.test(filename);
+    if (!isValidName) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
     const filePath = join(process.cwd(), 'public', 'uploads', filename);
-
-    // Verificar si el archivo existe
     if (!existsSync(filePath)) {
       throw new NotFoundException('Archivo no encontrado');
     }
-
-    // Servir el archivo
-    return res.sendFile(filePath);
+    res.sendFile(filePath);
   }
 }

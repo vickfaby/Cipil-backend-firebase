@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Header,
+  Res,
   StreamableFile,
   NotFoundException,
   Query,
@@ -17,11 +18,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { createReadStream, existsSync, statSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
+import type { Response } from 'express';
 
 import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id.pipe';
-import { storage } from 'src/common/utils/media.handle';
+import { storageFile } from 'src/common/utils/media.handle';
 
 import { ResumeService } from './resume.service';
 import { CreateResumeDto } from './dto/create-resume.dto';
@@ -161,7 +163,7 @@ export class ResumeController {
 
   @Post('/upload/file')
   @UseGuards(FirebaseAuthGuard)
-  @UseInterceptors(FileInterceptor('foto', { storage }))
+  @UseInterceptors(FileInterceptor('foto', { storage: storageFile }))
   uploadFile(@UploadedFile() file: Multer.File) {
     return {
       message: 'upload file successfully',
@@ -170,9 +172,10 @@ export class ResumeController {
   }
 
   @Get('/upload/file/:filename')
-  @Header('Content-Type', 'image/jpeg')
-  getUploadedImage(@Param('filename') filename: string): StreamableFile {
-    // Validación básica del nombre de archivo para evitar path traversal
+  getUploadedFile(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ): void {
     const isValidName = /^[A-Za-z0-9_.-]+$/.test(filename);
     if (!isValidName) {
       throw new NotFoundException('Archivo no encontrado');
@@ -183,13 +186,7 @@ export class ResumeController {
       throw new NotFoundException('Archivo no encontrado');
     }
 
-    const fileStats = statSync(filePath);
-    const fileStream = createReadStream(filePath);
-    return new StreamableFile(fileStream, {
-      type: 'image/jpeg',
-      disposition: 'inline',
-      length: fileStats.size,
-    });
+    res.sendFile(filePath);
   }
 
   @Get('pdf/:typedoc/:numdoc/:typepdf/:typehead')
