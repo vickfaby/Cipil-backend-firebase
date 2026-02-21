@@ -749,11 +749,11 @@ export class ResumevehiculoService {
       };
     });
     const enganche = await this.placaenganchesModel.findByPlaca(
-      datvehiculo.placa_enganche,
+      datvehiculo.placa,
     );
     const docsenganche =
       await this.documentoscargadosengancheService.findByResumeVehicle(
-        datvehiculo.placa_enganche,
+        datvehiculo.placa,
       );
     const listdocsenganche = (docsenganche ?? []).map((item: any) => {
       // const foto = fs.readFileSync(
@@ -849,7 +849,7 @@ export class ResumevehiculoService {
         ubicacion: datvehiculo.ubicacion,
         calificacion: datvehiculo.calificacion,
         ruta_frecuente: datvehiculo.ruta_frecuente,
-        placa_enganche: datvehiculo.placa_enganche,
+        placa_enganche: enganche?.[0]?.placa || '',
         codigo: codigoFinal,
       },
       marcaagua: marcaagua,
