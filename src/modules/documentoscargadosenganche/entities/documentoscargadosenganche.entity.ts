@@ -45,7 +45,7 @@ export class Documentoscargadosenganche extends Document {
 
   @Prop()
   documento: string;
-
+  
   @Prop()
   placa_enganche: string;
 
