@@ -849,7 +849,6 @@ export class ResumevehiculoService {
         ubicacion: datvehiculo.ubicacion,
         calificacion: datvehiculo.calificacion,
         ruta_frecuente: datvehiculo.ruta_frecuente,
-        placa_enganche: enganche?.[0]?.placa || '',
         codigo: codigoFinal,
       },
       marcaagua: marcaagua,
