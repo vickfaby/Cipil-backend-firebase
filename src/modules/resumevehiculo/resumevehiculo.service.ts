@@ -108,7 +108,6 @@ export class ResumevehiculoService {
           }
 
           // Asignar la placa_enganche al resumevehiculo
-          createResumevehiculoDto.placa_enganche = createResumevehiculoDto.enganche.placa;
         }
       }
 
@@ -615,7 +614,6 @@ export class ResumevehiculoService {
 
       const documentosEngancheConId = updateResumevehiculoDto?.documentosenganche?.map(doc => ({
         ...doc,
-        placaenganche_id: updateResumevehiculoDto.placa_enganche,
         user_id: updateResumevehiculoDto.user_id || doc.user_id,
       }));
 
@@ -653,7 +651,6 @@ export class ResumevehiculoService {
         ubicacion: updateResumevehiculoDto.ubicacion,
         calificacion: updateResumevehiculoDto.calificacion,
         ruta_frecuente: updateResumevehiculoDto.ruta_frecuente,
-        placa_enganche: updateResumevehiculoDto.placa_enganche,
         documentosvehiculo: respDocumentoscargadosresumevehicle,
         documentosenganche: respDocumentoscargadosenganche,
         progreso: updateResumevehiculoDto.progreso,

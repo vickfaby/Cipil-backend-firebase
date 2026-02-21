@@ -352,10 +352,6 @@ export class CreateResumevehiculoDto {
   @ApiProperty()
   ruta_frecuente: string;
 
-  @IsOptional()
-  @ApiProperty()
-  placa_enganche: string;
-
   @IsArray()
   @IsOptional()
   @ApiProperty()
