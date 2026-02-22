@@ -35,9 +35,11 @@ export class DocumentosController {
     return this.documentosService.findOne(id);
   }
   //(@Param() params: FindUserDocumentoDto
-  @Get('/grupodocumento/:grupodocumento')
-  findByGroupDocument(@Param() params: FindDocumentoDto) {
-    return this.documentosService.findByGroupDocument(params);
+  @Get('grupodocumento/:grupodocumento')
+  findByGroupDocument(
+    @Param('grupodocumento', ParseMongoIdPipe) grupodocumento: string,
+  ) {
+    return this.documentosService.findByGroupDocument({ grupodocumento });
   }
 
   @Patch(':id')

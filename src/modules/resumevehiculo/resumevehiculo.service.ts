@@ -327,6 +327,11 @@ export class ResumevehiculoService {
             select:
               'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento _id estado_documento',
           },
+          {
+            path: 'documentosenganche',
+            select:
+              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento placa_enganche _id estado_documento',
+          },
           { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
@@ -369,10 +374,12 @@ export class ResumevehiculoService {
         resumevehiculo.documentosvehiculo = documentosConAuditoria;
       }
 
-      // Enriquecer placas_enganche con datos completos del enganche
-      // y eliminar dataenganches y enganches
+      // Enriquecer placas_enganche con datos del enganche y solo los documentos que pertenecen a este vehículo.
       const resumevehiculoObj = resumevehiculo as any;
-      
+      const documentosEngancheDelVehiculo = Array.isArray(resumevehiculoObj.documentosenganche)
+        ? resumevehiculoObj.documentosenganche
+        : [];
+
       // Obtener placas de enganche (puede ser string o array)
       let placasEnganche: string[] = [];
       if (resumevehiculoObj.placas_enganche && Array.isArray(resumevehiculoObj.placas_enganche)) {
@@ -380,20 +387,19 @@ export class ResumevehiculoService {
       } else if (resumevehiculoObj.placa_enganche) {
         placasEnganche = [resumevehiculoObj.placa_enganche];
       }
-      
+
       if (placasEnganche && placasEnganche.length > 0) {
-        // Buscar todos los enganches asociados a estas placas
         const enganchesCompletos = await Promise.all(
           placasEnganche.map(async (placa: string) => {
             if (!placa) return null;
-            
+
             const enganche = await this.placaenganchesModel.findByPlaca(placa);
             if (enganche && enganche.length > 0) {
               const engancheData = enganche[0] as any;
-              
-              // Buscar documentos del enganche
-              const documentosEnganche = await this.documentoscargadosengancheService.findByResumeVehicle(placa);
-              
+              // Solo documentos de este enganche que están en el vehículo (evita duplicar con documentosvehiculo).
+              const docsParaPlaca = documentosEngancheDelVehiculo.filter(
+                (doc: any) => (doc?.placa_enganche || '') === placa,
+              );
               return {
                 capacidad: engancheData.capacidad,
                 color_id: engancheData.color_id,
@@ -411,16 +417,14 @@ export class ResumevehiculoService {
                 largo: engancheData.largo,
                 ancho: engancheData.ancho,
                 alto: engancheData.alto,
-                documentos: documentosEnganche || [],
-                documentosenganche: documentosEnganche || [],
+                documentosenganche: docsParaPlaca,
               };
             }
             return null;
-          })
+          }),
         );
-        
-        // Filtrar nulls y asignar al campo placas_enganche
-        resumevehiculoObj.placas_enganche = enganchesCompletos.filter(e => e !== null);
+
+        resumevehiculoObj.placas_enganche = enganchesCompletos.filter((e) => e !== null);
       } else {
         resumevehiculoObj.placas_enganche = [];
       }
@@ -606,10 +610,14 @@ export class ResumevehiculoService {
       
       console.log('IDs de documentos guardados:', respDocumentoscargadosresumevehicle);
 
-      const documentosEngancheConId = updateResumevehiculoDto?.documentosenganche?.map(doc => ({
-        ...doc,
-        user_id: updateResumevehiculoDto.user_id || doc.user_id,
-      }));
+      // When user sends documentosenganche: [] we replace with empty; never pass undefined.
+      const documentosenganchePayload = updateResumevehiculoDto.documentosenganche ?? [];
+      const documentosEngancheConId = Array.isArray(documentosenganchePayload)
+        ? documentosenganchePayload.map((doc: any) => ({
+            ...doc,
+            user_id: updateResumevehiculoDto.user_id || doc.user_id,
+          }))
+        : [];
 
       const respDocumentoscargadosenganche =
         await this.documentoscargadosengancheService.updateManyDocumentoscargadosenganche(
@@ -727,7 +735,6 @@ export class ResumevehiculoService {
         calificacion: updateResumevehiculoDto.calificacion,
         ruta_frecuente: updateResumevehiculoDto.ruta_frecuente,
         documentosvehiculo: respDocumentoscargadosresumevehicle,
-        documentosenganche: respDocumentoscargadosenganche,
         progreso: updateResumevehiculoDto.progreso,
         user_id: updateResumevehiculoDto.user_id,
         status: updateResumevehiculoDto.status,
@@ -744,6 +751,12 @@ export class ResumevehiculoService {
         propietario_liga_id: updateResumevehiculoDto.propietario_liga_id,
         operador_liga_id: updateResumevehiculoDto.operador_liga_id,
       };
+      // When payload has documentosenganche (including []), persist it so "delete all" works.
+      if (Object.prototype.hasOwnProperty.call(updateResumevehiculoDto, 'documentosenganche')) {
+        data.documentosenganche = Array.isArray(respDocumentoscargadosenganche)
+          ? respDocumentoscargadosenganche
+          : [];
+      }
       if (placasEngancheUpdate.length > 0) {
         data.placas_enganche = placasEngancheUpdate;
       } else {

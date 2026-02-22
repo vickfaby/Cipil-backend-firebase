@@ -5,17 +5,20 @@ export class FindDocumentoDto {
   @IsString()
   @IsOptional()
   @ApiProperty()
-  grupodocumento: string;
+  grupodocumento?: string;
+
   @IsString()
   @IsOptional()
   @ApiProperty()
-  nombre_documento: string;
+  nombre_documento?: string;
+
   @IsString()
   @IsOptional()
   @ApiProperty()
-  descripcion_documento: string;
+  descripcion_documento?: string;
+
   @IsString()
   @IsOptional()
   @ApiProperty()
-  tipo_documento: string;
+  tipo_documento?: string;
 }
