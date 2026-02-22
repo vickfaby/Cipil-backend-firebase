@@ -29,6 +29,7 @@ import { CreateResumevehiculoDto } from './dto/create-resumevehiculo.dto';
 import { UpdateResumevehiculoDto } from './dto/update-resumevehiculo.dto';
 import { GetResumeVehiculoPDFDto } from './dto/get-resume-pdf.dto';
 import { PaginateV2 } from 'src/common/decorators/paginate-v2.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import type { Multer } from 'multer';
 
@@ -145,6 +146,7 @@ export class ResumevehiculoController {
     return this.resumevehiculoService.remove(id);
   }
 
+  @Public()
   @Post('/upload/file')
   @UseInterceptors(FileInterceptor('foto', { storage }))
   uploadFile(@UploadedFile() file: Multer.File) {
@@ -154,6 +156,7 @@ export class ResumevehiculoController {
     };
   }
 
+  @Public()
   @Get('/upload/file/:filename')
   @Header('Content-Type', 'image/jpeg')
   @ApiOperation({ summary: 'Obtener/visualizar imagen subida (foto de vehículo o documento)' })
