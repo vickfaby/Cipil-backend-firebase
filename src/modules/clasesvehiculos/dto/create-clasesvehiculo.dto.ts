@@ -5,10 +5,10 @@ export class CreateClasesvehiculoDto {
   @IsString()
   @MinLength(1)
   @ApiProperty()
-  nombre_clasevehiculo: string;
+  nombre_clasesvehiculos: string;
 
   @IsString()
   @MinLength(1)
   @ApiProperty()
-  detalle_clasevehiculo: string;
+  detalle_clasesvehiculos: string;
 }

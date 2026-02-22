@@ -4,10 +4,10 @@ import { Document } from 'mongoose';
 @Schema({ timestamps: true })
 export class Clasesvehiculos extends Document {
   @Prop()
-  nombre_clasevehiculo: string;
+  nombre_clasesvehiculos: string;
 
   @Prop()
-  detalle_clasevehiculo: string;
+  detalle_clasesvehiculos: string;
 }
 
 export const ClasesvehiculosSchema =

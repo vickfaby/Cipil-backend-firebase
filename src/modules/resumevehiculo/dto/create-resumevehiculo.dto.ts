@@ -4,7 +4,6 @@ import {
   IsArray,
   IsBoolean,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   MinLength,
@@ -111,15 +110,15 @@ export class CreateResumevehiculoDto {
   __v: string;
 
   @IsOptional()
-  @IsObject()
-  @ValidateNested()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => CreateEngancheDto)
-  @ApiProperty({ 
-    description: 'Datos del enganche (requerido cuando tipo de vehículo es ARTICULADO). Debe enviarse como objeto anidado, NO con prefijos enganche_', 
+  @ApiProperty({
+    description: 'Lista de enganches (requerido cuando tipo de vehículo es ARTICULADO). Cada elemento tiene placa, marca_id, modelo, etc. NO usar prefijos enganche_.',
     required: false,
-    type: CreateEngancheDto
+    type: [CreateEngancheDto],
   })
-  enganche?: CreateEngancheDto;
+  enganches?: CreateEngancheDto[];
 
   @IsArray()
   @ApiProperty()

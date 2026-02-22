@@ -125,8 +125,11 @@ export class ResumevehiculoController {
   ) {
     console.log('=== PATCH /resumevehiculo/:id ===');
     console.log('ID:', id);
+    console.log('--- Full payload (edit) ---');
+    console.log(JSON.stringify(updateResumevehiculoDto, null, 2));
+    console.log('--- End payload ---');
     console.log('Documentos vehiculo recibidos:', updateResumevehiculoDto.documentosvehiculo?.length || 0);
-    
+
     const result = await this.resumevehiculoService.update(id, updateResumevehiculoDto);
     
     console.log('Resultado del update:', result ? 'OK' : 'NULL/UNDEFINED');

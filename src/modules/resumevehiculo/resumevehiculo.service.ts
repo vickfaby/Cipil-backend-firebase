@@ -57,67 +57,59 @@ export class ResumevehiculoService {
   async create(createResumevehiculoDto: CreateResumevehiculoDto) {
     console.log('create data', createResumevehiculoDto);
     try {
-      // Verificar si el tipo de vehículo es ARTICULADO y si viene el objeto enganche
-      if (createResumevehiculoDto.enganche) {
-        const tipovehiculo = await this.tipovehiculosService.findOne(
-          createResumevehiculoDto.tipovehiculo_id,
+      const placasEnganche: string[] = [];
+      const enganchesList = createResumevehiculoDto.enganches ?? [];
+      const clasevehiculo = await this.clasesvehiculoService.findOne(
+        createResumevehiculoDto.clasevehiculo_id,
+      );
+      const isArticulado =
+        (clasevehiculo as any)?.nombre_clasesvehiculos?.toUpperCase() === 'ARTICULADO';
+      console.log('Clase vehiculo found (create):', (clasevehiculo as any)?.nombre_clasesvehiculos);
+      console.log('Is Articulado (create):', isArticulado);
+
+      for (const eng of enganchesList) {
+        if (!isArticulado) continue;
+        const engancheData: CreatePlacaenganchesDto = {
+          marca_id: eng.marca_id,
+          modelo: eng.modelo,
+          numero_serie: eng.numero_serie,
+          color_id: eng.color_id,
+          tipocarroceria_id: eng.tipocarroceria_id,
+          placa: eng.placa,
+          peso: eng.peso,
+          capacidad: eng.capacidad ?? 0,
+          configuracionvehicular: eng.configuracionvehicular ?? '',
+          foto: eng.foto ?? '',
+          propietario_id: createResumevehiculoDto.propietario_id ?? '',
+          tenedor_id: createResumevehiculoDto.tenedor_id ?? '',
+          user_id: createResumevehiculoDto.user_id,
+          numero_plaqueta: eng.numero_plaqueta,
+          largo: eng.largo,
+          ancho: eng.ancho,
+          alto: eng.alto,
+          s1: eng.s1,
+          s2: eng.s2,
+          s3: eng.s3,
+          s4: eng.s4,
+        };
+        const engancheExistente = await this.placaenganchesModel.findByPlaca(
+          eng.placa,
         );
-
-        if (tipovehiculo && tipovehiculo.nombre_tipovehiculo?.toUpperCase() === 'ARTICULADO') {
-          // Crear o actualizar el enganche
-          const engancheData: CreatePlacaenganchesDto = {
-            marca_id: createResumevehiculoDto.enganche.marca_id,
-            modelo: createResumevehiculoDto.enganche.modelo,
-            numero_serie: createResumevehiculoDto.enganche.numero_serie,
-            color_id: createResumevehiculoDto.enganche.color_id,
-            tipocarroceria_id: createResumevehiculoDto.enganche.tipocarroceria_id,
-            placa: createResumevehiculoDto.enganche.placa,
-            peso: createResumevehiculoDto.enganche.peso,
-            capacidad: createResumevehiculoDto.enganche.capacidad ?? 0,
-            configuracionvehicular: createResumevehiculoDto.enganche.configuracionvehicular ?? '',
-            foto: createResumevehiculoDto.enganche.foto ?? '',
-            propietario_id: createResumevehiculoDto.propietario_id ?? '',
-            tenedor_id: createResumevehiculoDto.tenedor_id ?? '',
-            user_id: createResumevehiculoDto.user_id,
-            numero_plaqueta: createResumevehiculoDto.enganche.numero_plaqueta,
-            largo: createResumevehiculoDto.enganche.largo,
-            ancho: createResumevehiculoDto.enganche.ancho,
-            alto: createResumevehiculoDto.enganche.alto,
-            s1: createResumevehiculoDto.enganche.s1,
-            s2: createResumevehiculoDto.enganche.s2,
-            s3: createResumevehiculoDto.enganche.s3,
-            s4: createResumevehiculoDto.enganche.s4,
-          };
-
-          // Verificar si ya existe un enganche con esa placa
-          const engancheExistente = await this.placaenganchesModel.findByPlaca(
-            createResumevehiculoDto.enganche.placa,
-          );
-
-          if (engancheExistente && engancheExistente.length > 0) {
-            // Actualizar enganche existente
-            const enganche = engancheExistente[0] as any;
-            const engancheId = enganche._id ? String(enganche._id) : enganche.id;
-            await this.placaenganchesModel.update(
-              engancheId,
-              engancheData,
-            );
-          } else {
-            // Crear nuevo enganche
-            await this.placaenganchesModel.create(engancheData);
-          }
-
-          // Asignar la placa_enganche al resumevehiculo
+        if (engancheExistente && engancheExistente.length > 0) {
+          const enganche = engancheExistente[0] as any;
+          const engancheId = enganche._id ? String(enganche._id) : enganche.id;
+          await this.placaenganchesModel.update(engancheId, engancheData);
+        } else {
+          await this.placaenganchesModel.create(engancheData);
         }
+        placasEnganche.push(eng.placa);
       }
 
-      // Remover el objeto enganche del DTO antes de crear el resumevehiculo
-      // ya que no es un campo de la entidad Resumevehiculo
-      const { enganche, ...resumevehiculoData } = createResumevehiculoDto;
-
-      const resumevehiculo = await this.resumevehiculoModel.create(
-        resumevehiculoData,
-      );
+      const { enganches, ...resumevehiculoData } = createResumevehiculoDto;
+      const resumevehiculo = await this.resumevehiculoModel.create({
+        ...resumevehiculoData,
+        placas_enganche: placasEnganche,
+      });
       return resumevehiculo;
     } catch (error) {
       this.handleExceptions(error);
@@ -133,7 +125,7 @@ export class ResumevehiculoService {
   }
   async findAll(pagination: any) {
     const summarySelect =
-      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placa_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
     const limit = Number(pagination?.limit) || 10;
     const page = Number(pagination?.page) || 1;
     const skip = (page - 1) * limit;
@@ -178,7 +170,7 @@ export class ResumevehiculoService {
     try {
       const filter = { user_id: { $ne: userId } };
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placa_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -258,7 +250,7 @@ export class ResumevehiculoService {
         : baseFilter;
 
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placa_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -448,7 +440,7 @@ export class ResumevehiculoService {
   async findByUser(userId: string, pagination: any) {
     try {
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placa_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const filter = { user_id: userId };
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
@@ -505,7 +497,7 @@ export class ResumevehiculoService {
         : baseFilter;
 
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placa_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -578,7 +570,9 @@ export class ResumevehiculoService {
   }
 
   async update(id: string, updateResumevehiculoDto: UpdateResumevehiculoDto) {
-    const resumevehiculo = await this.resumevehiculoModel.findById(id);
+    const resumevehiculo = await this.resumevehiculoModel
+      .findById(id)
+      .populate('clasevehiculo_id');
     
     if (!resumevehiculo) {
       throw new BadRequestException('Vehículo no encontrado');
@@ -622,7 +616,88 @@ export class ResumevehiculoService {
           documentosEngancheConId as UpdateDocumentoscargadosengancheDto[],
         );
 
-      const data = {
+      const placasEngancheUpdate: string[] = [];
+      const enganchesList = updateResumevehiculoDto.enganches ?? [];
+      console.log('Enganches received:', enganchesList.length);
+      if (enganchesList.length > 0) {
+        const clasevehiculoIdRaw =
+          updateResumevehiculoDto.clasevehiculo_id ?? resumevehiculo.clasevehiculo_id;
+        const clasevehiculoId =
+          typeof clasevehiculoIdRaw === 'string'
+            ? clasevehiculoIdRaw
+            : (clasevehiculoIdRaw as any)?._id?.toString?.() ??
+              (clasevehiculoIdRaw as any)?.toString?.() ??
+              '';
+        console.log('Clasevehiculo ID raw (update):', clasevehiculoIdRaw);
+        console.log('Clasevehiculo ID resolved (update):', clasevehiculoId);
+
+        // Prefer populated data from resumevehiculo if available, otherwise fetch by ID
+        const populatedClase = resumevehiculo.clasevehiculo_id as any;
+        const populatedNombre: string | undefined =
+          populatedClase?.nombre_clasesvehiculos ??
+          (typeof populatedClase === 'object' && populatedClase !== null
+            ? populatedClase.nombre_clasesvehiculos
+            : undefined);
+
+        let nombreClasevehiculo: string | undefined = populatedNombre;
+        if (!nombreClasevehiculo && clasevehiculoId) {
+          const clasevehiculo = await this.clasesvehiculoService.findOne(clasevehiculoId);
+          nombreClasevehiculo = (clasevehiculo as any)?.nombre_clasesvehiculos;
+        }
+
+        const isArticulado =
+          nombreClasevehiculo?.toUpperCase() === 'ARTICULADO';
+        console.log('Clase vehiculo found (update):', nombreClasevehiculo);
+        console.log('Is Articulado (update):', isArticulado);
+        
+        const userIdRaw =
+          updateResumevehiculoDto.user_id ?? (resumevehiculo as any).user_id;
+        const userId =
+          typeof userIdRaw === 'string'
+            ? userIdRaw
+            : (userIdRaw as any)?._id?.toString?.() ??
+              (userIdRaw as any)?.toString?.() ??
+              '';
+        for (const eng of enganchesList) {
+          if (!isArticulado) continue;
+          const engancheData: CreatePlacaenganchesDto = {
+            marca_id: eng.marca_id,
+            modelo: eng.modelo,
+            numero_serie: eng.numero_serie,
+            color_id: eng.color_id,
+            tipocarroceria_id: eng.tipocarroceria_id,
+            placa: eng.placa,
+            peso: eng.peso,
+            capacidad: eng.capacidad ?? 0,
+            configuracionvehicular: eng.configuracionvehicular ?? '',
+            foto: eng.foto ?? '',
+            propietario_id: updateResumevehiculoDto.propietario_id ?? '',
+            tenedor_id: updateResumevehiculoDto.tenedor_id ?? '',
+            user_id: userId,
+            numero_plaqueta: eng.numero_plaqueta,
+            largo: eng.largo,
+            ancho: eng.ancho,
+            alto: eng.alto,
+            s1: eng.s1,
+            s2: eng.s2,
+            s3: eng.s3,
+            s4: eng.s4,
+          };
+          const engancheExistente = await this.placaenganchesModel.findByPlaca(
+            eng.placa,
+          );
+          if (engancheExistente && engancheExistente.length > 0) {
+            const enganche = engancheExistente[0] as any;
+            const engancheId = enganche._id ? String(enganche._id) : enganche.id;
+            await this.placaenganchesModel.update(engancheId, engancheData);
+          } else {
+            await this.placaenganchesModel.create(engancheData);
+          }
+          placasEngancheUpdate.push(eng.placa);
+        }
+      }
+
+      const data: any = {
         fotos: updateResumevehiculoDto.fotos,
         placa: updateResumevehiculoDto.placa,
         tipovehiculo_id: updateResumevehiculoDto.tipovehiculo_id,
@@ -669,6 +744,26 @@ export class ResumevehiculoService {
         propietario_liga_id: updateResumevehiculoDto.propietario_liga_id,
         operador_liga_id: updateResumevehiculoDto.operador_liga_id,
       };
+      if (placasEngancheUpdate.length > 0) {
+        data.placas_enganche = placasEngancheUpdate;
+      } else {
+        // If enganches was provided but empty, or filtered out, we might want to clear it.
+        // But if it was filtered out because not Articulado, we shouldn't clear it if it existed?
+        // Actually, if the user sends enganches, they probably intend to set them.
+        // If the vehicle is NOT Articulado, we currently skip adding them to placasEngancheUpdate.
+        // So data.placas_enganche remains undefined, so DB is not updated.
+        // This is correct behavior for non-Articulado (ignore enganches).
+        
+        // However, if the user sent an empty array `enganches: []`, we want to clear them.
+        if (updateResumevehiculoDto.enganches !== undefined && Array.isArray(updateResumevehiculoDto.enganches)) {
+           // If array is empty, clear DB field.
+           if (updateResumevehiculoDto.enganches.length === 0) {
+             data.placas_enganche = [];
+           }
+           // If array had items but they were all filtered out (not Articulado), 
+           // we also don't update data.placas_enganche, so it stays as is.
+        }
+      }
 
       // Actualizar el documento en la base de datos
       console.log('Actualizando documento en BD...');

@@ -21,9 +21,12 @@ export class CleanEngancheInterceptor implements NestInterceptor {
         }
       });
 
-      // Si existe el objeto enganche anidado, asegurarse de que esté bien formado
-      if (cleanedBody.enganche && typeof cleanedBody.enganche === 'object') {
-        // El objeto enganche ya está correcto, no hacer nada
+      // Aceptar enganches (array). Eliminar clave legacy enganche si existe para evitar confusión.
+      if (cleanedBody.enganche !== undefined) {
+        delete cleanedBody.enganche;
+      }
+      if (cleanedBody.enganches && Array.isArray(cleanedBody.enganches)) {
+        // Array de enganches ya correcto
       }
 
       request.body = cleanedBody;
