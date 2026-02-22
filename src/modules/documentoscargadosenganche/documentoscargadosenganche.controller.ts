@@ -8,7 +8,11 @@ import {
   Delete,
   UploadedFile,
   UseInterceptors,
+  NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
+import { createReadStream, existsSync, statSync } from 'fs';
+import { join } from 'path';
 import {
   ApiTags,
   ApiOperation,
@@ -112,6 +116,25 @@ export class DocumentoscargadosengancheController {
   @ApiResponse({ status: 200, description: 'Documentos del usuario para la fecha indicada' })
   findByUser(@Param() params: FindUserDocumentoDto) {
     return this.documentoscargadosengancheService.findByUser(params);
+  }
+
+  @Get('upload/file/:filename')
+  @ApiOperation({ summary: 'Obtener imagen/archivo de un documento de enganche' })
+  @ApiParam({ name: 'filename', description: 'Nombre del archivo (ej. 1771791819606.jpg)', example: '1771791819606.jpg' })
+  getUploadedFile(@Param('filename') filename: string): StreamableFile {
+    const isValidName = /^[A-Za-z0-9_.-]+$/.test(filename);
+    if (!isValidName) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+    const filePath = join(process.cwd(), 'public', 'uploads', filename);
+    if (!existsSync(filePath)) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+    const fileStream = createReadStream(filePath);
+    return new StreamableFile(fileStream, {
+      type: 'image/jpeg',
+      disposition: 'inline',
+    });
   }
 
   @Get(':id')
