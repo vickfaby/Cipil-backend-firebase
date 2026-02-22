@@ -163,6 +163,8 @@ export class Resumevehiculo extends Document {
   @Prop()
   ruta_frecuente: string;
 
+  @Prop([String])
+  placas_enganche: string[];
 
   @Prop([
     {

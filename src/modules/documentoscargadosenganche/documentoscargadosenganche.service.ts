@@ -140,6 +140,22 @@ export class DocumentoscargadosengancheService {
     );
   }
 
+  /**
+   * Normalize a reference field from frontend: accept string ID or populated object with _id/id.
+   * Returns a string suitable for ObjectId, or undefined if not resolvable.
+   */
+  private toObjectIdString(value: any): string | undefined {
+    if (value == null) return undefined;
+    if (typeof value === 'string') {
+      return value.trim() || undefined;
+    }
+    if (typeof value === 'object') {
+      const id = value._id ?? value.id;
+      if (id != null) return typeof id === 'string' ? id : String(id);
+    }
+    return undefined;
+  }
+
   async updateManyDocumentoscargadosenganche(
     updateDocumentoscargadosengancheDto: UpdateDocumentoscargadosengancheDto[],
   ) {
@@ -148,28 +164,33 @@ export class DocumentoscargadosengancheService {
       const savedIds: Types.ObjectId[] = [];
       let filter: { _id: Types.ObjectId; deleted?: boolean };
       for (const obj of arrayToUpdate) {
-        if (obj.hasOwnProperty('_id') === false) {
+        const existingId = this.toObjectIdString(obj._id);
+        if (!existingId) {
           filter = { _id: new mongoose.Types.ObjectId() };
-          //console.log('no trae la propiedad', filter);
         } else {
-          filter = { _id: new Types.ObjectId(obj._id as any), deleted: false };
-          //console.log('trae la propiedad', filter);
+          filter = { _id: new Types.ObjectId(existingId), deleted: false };
         }
-        const update = {
+        const documentoId = this.toObjectIdString(obj.documento_id);
+        const grupodocumentoId = this.toObjectIdString(obj.grupodocumento_id);
+        const entidadEmisoraId = this.toObjectIdString(obj.entidad_emisora);
+        const userId = this.toObjectIdString(obj.user_id);
+
+        const update: Record<string, any> = {
           categoria: obj.categoria,
           codigo_referencia: obj.codigo_referencia,
           documento: obj.documento,
-          documento_id: obj.documento_id,
-          entidad_emisora: obj.entidad_emisora,
           estado_documento: obj.estado_documento,
           fecha_expedicion: obj.fecha_expedicion,
           fecha_vencimiento: obj.fecha_vencimiento,
-          grupodocumento_id: obj.grupodocumento_id,
           nombre: obj.nombre,
           observaciones: obj.observaciones,
           placa_enganche: obj.placa_enganche,
-          user_id: obj.user_id,
         };
+        if (documentoId != null) update.documento_id = documentoId;
+        if (grupodocumentoId != null) update.grupodocumento_id = grupodocumentoId;
+        if (entidadEmisoraId != null) update.entidad_emisora = entidadEmisoraId;
+        if (userId != null) update.user_id = userId;
+
         await this.documentoscargadosengancheModel.updateOne(filter, update, {
           upsert: true,
         });
