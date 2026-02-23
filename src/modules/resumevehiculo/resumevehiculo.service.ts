@@ -31,6 +31,7 @@ import { Auditoriadocsvehiculo } from '../auditoriadocsvehiculo/entities/auditor
 import { UpdateDocumentoscargadosvehiculoDto } from '../documentoscargadosvehiculo/dto/update-documentoscargadosvehiculo.dto';
 import { UpdateDocumentoscargadosengancheDto } from '../documentoscargadosenganche/dto/update-documentoscargadosenganche.dto';
 import { Posiciondisponible } from '../posicion_disponible/entities/posicion_disponible.entity';
+import { Auditoriadocumentosenganche } from '../auditoriadocumentosenganche/entities/auditoriadocumentosenganche.entity';
 
 @Injectable()
 export class ResumevehiculoService {
@@ -40,6 +41,8 @@ export class ResumevehiculoService {
     private readonly resumevehiculoModel: ModelExt<Resumevehiculo>,
     @InjectModel(Auditoriadocsvehiculo.name)
     private readonly auditoriaVehiculoModel: ModelExt<Auditoriadocsvehiculo>,
+    @InjectModel(Auditoriadocumentosenganche.name)
+    private readonly auditoriaDocumentosEngancheModel: ModelExt<Auditoriadocumentosenganche>,
     @InjectModel(Posiciondisponible.name)
     private readonly posicionDisponibleModel: ModelExt<Posiciondisponible>,
     private readonly documentoscargadosresumevehicluloService: DocumentoscargadosvehiculoService,
@@ -125,7 +128,7 @@ export class ResumevehiculoService {
   }
   async findAll(pagination: any) {
     const summarySelect =
-      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche documentosenganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
     const limit = Number(pagination?.limit) || 10;
     const page = Number(pagination?.page) || 1;
     const skip = (page - 1) * limit;
@@ -141,6 +144,11 @@ export class ResumevehiculoService {
           { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
           { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
           { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+          {
+            path: 'documentosenganche',
+            select:
+              'grupodocumento_id documento_id fecha_expedicion fecha_vencimiento nombre categoria codigo_referencia observaciones entidad_emisora documento placa_enganche _id estado_documento',
+          },
         ])
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -151,9 +159,47 @@ export class ResumevehiculoService {
 
     const totalPages = Math.ceil(totalDocs / limit) || 1;
     const docsWithPos = await this._attachLastPosition(docs);
+    const docsWithPosAndAudits = await Promise.all(
+      (docsWithPos as any[]).map(async (vehiculo: any) => {
+        const vehiculoObj =
+          typeof vehiculo?.toObject === 'function' ? vehiculo.toObject() : vehiculo;
+        const documentosEnganche = Array.isArray(vehiculoObj.documentosenganche)
+          ? vehiculoObj.documentosenganche
+          : [];
+
+        const documentosEngancheConAuditoria = await Promise.all(
+          documentosEnganche.map(async (documento: any) => {
+            const auditoriaReciente =
+              await this.auditoriaDocumentosEngancheModel
+                .findOne({
+                  documento_cargado_id: documento._id,
+                  deleted: false,
+                })
+                .populate({
+                  path: 'auditor',
+                  select: 'nombre correo _id',
+                  model: 'Usuarios',
+                })
+                .sort({ createdAt: -1 })
+                .select('-__v -deleted')
+                .lean();
+
+            return {
+              ...documento,
+              ultima_auditoria: auditoriaReciente || null,
+            };
+          }),
+        );
+
+        return {
+          ...vehiculoObj,
+          documentosenganche: documentosEngancheConAuditoria,
+        };
+      }),
+    );
 
     return {
-      docs: docsWithPos,
+      docs: docsWithPosAndAudits,
       totalDocs,
       limit,
       totalPages,
@@ -372,6 +418,38 @@ export class ResumevehiculoService {
         );
 
         resumevehiculo.documentosvehiculo = documentosConAuditoria;
+      }
+
+      // Para cada documento de enganche, obtener la auditoría más reciente
+      if (
+        resumevehiculo.documentosenganche &&
+        resumevehiculo.documentosenganche.length > 0
+      ) {
+        const documentosEngancheConAuditoria = await Promise.all(
+          resumevehiculo.documentosenganche.map(async (documento: any) => {
+            const auditoriaReciente =
+              await this.auditoriaDocumentosEngancheModel
+                .findOne({
+                  documento_cargado_id: documento._id,
+                  deleted: false,
+                })
+                .populate({
+                  path: 'auditor',
+                  select: 'nombre correo _id',
+                  model: 'Usuarios',
+                })
+                .sort({ createdAt: -1 })
+                .select('-__v -deleted')
+                .lean();
+
+            return {
+              ...documento,
+              ultima_auditoria: auditoriaReciente || null,
+            };
+          }),
+        );
+
+        resumevehiculo.documentosenganche = documentosEngancheConAuditoria;
       }
 
       // Enriquecer placas_enganche con datos del enganche y solo los documentos que pertenecen a este vehículo.

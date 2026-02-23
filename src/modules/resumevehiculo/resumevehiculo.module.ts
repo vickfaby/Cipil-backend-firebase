@@ -30,6 +30,10 @@ import {
   Posiciondisponible,
   PosiciondisponibleSchema,
 } from '../posicion_disponible/entities/posicion_disponible.entity';
+import {
+  Auditoriadocumentosenganche,
+  AuditoriadocumentosengancheSchema,
+} from '../auditoriadocumentosenganche/entities/auditoriadocumentosenganche.entity';
 
 @Module({
   controllers: [ResumevehiculoController],
@@ -78,6 +82,13 @@ import {
         name: Posiciondisponible.name,
         useFactory: () => {
           const schema = PosiciondisponibleSchema;
+          return schema;
+        },
+      },
+      {
+        name: Auditoriadocumentosenganche.name,
+        useFactory: () => {
+          const schema = AuditoriadocumentosengancheSchema;
           return schema;
         },
       },
