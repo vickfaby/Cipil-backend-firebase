@@ -44,6 +44,7 @@ export { SexoModule } from './sexo/sexo.module';
 export { AuditoriadocsoperadorModule } from './auditoriadocsoperador/auditoriadocsoperador.module';
 export { AuditoriadocsvehiculoModule } from './auditoriadocsvehiculo/auditoriadocsvehiculo.module';
 export { AuditoriareferenciasModule } from './auditoriareferencias/auditoriareferencias.module';
+export { AuditoriadocumentosengancheModule } from './auditoriadocumentosenganche/auditoriadocumentosenganche.module';
 
 {
   /* hoja de vida vehiculos */

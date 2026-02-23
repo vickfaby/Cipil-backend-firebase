@@ -23,6 +23,7 @@ import { CitiesService } from '../cities/cities.service';
 import { LogimpresionesService } from '../logimpresiones/logimpresiones.service';
 import { Auditoriadocsoperador } from '../auditoriadocsoperador/entities/auditoriadocsoperador.entity';
 import { Posiciondisponible } from '../posicion_disponible/entities/posicion_disponible.entity';
+import { Auditoriareferencias } from '../auditoriareferencias/entities/auditoriareferencias.entity';
 
 type FirstResumeBasic = {
   _id?: string;
@@ -62,6 +63,8 @@ export class ResumeService {
     private readonly resumeModel: ModelExt<Resume>,
     @InjectModel(Auditoriadocsoperador.name)
     private readonly auditoriaModel: ModelExt<Auditoriadocsoperador>,
+    @InjectModel(Auditoriareferencias.name)
+    private readonly auditoriaReferenciasModel: ModelExt<Auditoriareferencias>,
     @InjectModel(Posiciondisponible.name)
     private readonly posicionDisponibleModel: ModelExt<Posiciondisponible>,
     private readonly seguridadsocialService: SeguridadsocialesService,
@@ -354,9 +357,37 @@ export class ResumeService {
         );
       }
 
+      // Para cada referencia, obtener la auditoría más reciente
+      let referenciasConAuditoria: any[] = (resume.referencias || []) as any[];
+      if (resume.referencias && resume.referencias.length > 0) {
+        referenciasConAuditoria = await Promise.all(
+          (resume.referencias as any[]).map(async (referencia: any) => {
+            const auditoriaReciente = await this.auditoriaReferenciasModel
+              .findOne({
+                referencia_id: referencia._id,
+                deleted: false,
+              })
+              .populate({
+                path: 'auditor',
+                select: 'nombre correo _id',
+                model: 'Usuarios',
+              })
+              .sort({ createdAt: -1 })
+              .select('-__v -deleted')
+              .lean();
+
+            return {
+              ...referencia,
+              ultima_auditoria: auditoriaReciente || null,
+            };
+          }),
+        );
+      }
+
       const resumeWithDocs = {
         ...(resume as Record<string, unknown>),
         entidades_seguridad_social: entidadesNormalizadas,
+        referencias: referenciasConAuditoria,
         documentos: documentosConAuditoria,
       } as Record<string, unknown>;
 

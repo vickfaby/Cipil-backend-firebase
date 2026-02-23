@@ -12,6 +12,10 @@ import {
   Auditoriadocsoperador,
   AuditoriadocsoperadorSchema,
 } from '../auditoriadocsoperador/entities/auditoriadocsoperador.entity';
+import {
+  Auditoriareferencias,
+  AuditoriareferenciasSchema,
+} from '../auditoriareferencias/entities/auditoriareferencias.entity';
 
 import { PaginationV2Middleware } from 'src/common/middleware/pagination-v2.middleware';
 import { CountriesModule } from '../countries/countries.module';
@@ -35,6 +39,10 @@ import {
       {
         name: Auditoriadocsoperador.name,
         schema: AuditoriadocsoperadorSchema,
+      },
+      {
+        name: Auditoriareferencias.name,
+        schema: AuditoriareferenciasSchema,
       },
       {
         name: Posiciondisponible.name,

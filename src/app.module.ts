@@ -56,6 +56,7 @@ import {
   AuditoriadocsoperadorModule,
   AuditoriadocsvehiculoModule,
   AuditoriareferenciasModule,
+  AuditoriadocumentosengancheModule,
   PosiciondisponibleModule,
 } from './modules';
 
@@ -131,6 +132,7 @@ import {
     AuditoriadocsoperadorModule,
     AuditoriadocsvehiculoModule,
     AuditoriareferenciasModule,
+    AuditoriadocumentosengancheModule,
     PosiciondisponibleModule,
   ],
   controllers: [AppController, ProfileController],
