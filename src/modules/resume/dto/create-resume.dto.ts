@@ -88,9 +88,9 @@ export class CreateResumeDto {
   ciudad: number;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
-  ubicacion: string;
+  @IsOptional()
+  @ApiProperty({ required: false })
+  ubicacion?: string;
 
   @IsOptional()
   @ApiProperty()
