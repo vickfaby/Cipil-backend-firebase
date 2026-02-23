@@ -43,6 +43,7 @@ export { TipopersonaModule } from './tipopersona/tipopersona.module';
 export { SexoModule } from './sexo/sexo.module';
 export { AuditoriadocsoperadorModule } from './auditoriadocsoperador/auditoriadocsoperador.module';
 export { AuditoriadocsvehiculoModule } from './auditoriadocsvehiculo/auditoriadocsvehiculo.module';
+export { AuditoriareferenciasModule } from './auditoriareferencias/auditoriareferencias.module';
 
 {
   /* hoja de vida vehiculos */

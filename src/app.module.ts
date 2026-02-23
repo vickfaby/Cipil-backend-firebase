@@ -55,6 +55,7 @@ import {
   SexoModule,
   AuditoriadocsoperadorModule,
   AuditoriadocsvehiculoModule,
+  AuditoriareferenciasModule,
   PosiciondisponibleModule,
 } from './modules';
 
@@ -129,6 +130,7 @@ import {
     SexoModule,
     AuditoriadocsoperadorModule,
     AuditoriadocsvehiculoModule,
+    AuditoriareferenciasModule,
     PosiciondisponibleModule,
   ],
   controllers: [AppController, ProfileController],

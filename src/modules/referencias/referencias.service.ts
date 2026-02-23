@@ -13,12 +13,15 @@ import { Referencias } from './entities/referencias.entity';
 import { CitiesService } from '../cities/cities.service';
 import { CountriesService } from '../countries/countries.service';
 import { StatesService } from '../states/states.service';
+import { Auditoriareferencias } from '../auditoriareferencias/entities/auditoriareferencias.entity';
 
 @Injectable()
 export class ReferenciasService {
   constructor(
     @InjectModel(Referencias.name)
     private readonly referenciasModel: ModelExt<Referencias>,
+    @InjectModel(Auditoriareferencias.name)
+    private readonly auditoriaReferenciasModel: ModelExt<Auditoriareferencias>,
     private readonly coutriesModel: CountriesService,
     private readonly statesModel: StatesService,
     private readonly citiesModel: CitiesService,
@@ -36,12 +39,50 @@ export class ReferenciasService {
   }
 
   async findAll() {
-    return this.referenciasModel.find({}).select('-__v');
+    const referencias = await this.referenciasModel.find({}).select('-__v').lean();
+
+    const referenciasConUltimaAuditoria = await Promise.all(
+      referencias.map(async (referencia: any) => {
+        const ultimaAuditoria = await this.auditoriaReferenciasModel
+          .findOne({
+            referencia_id: referencia._id,
+            deleted: false,
+          })
+          .sort({ createdAt: -1 })
+          .select('-__v -deleted')
+          .lean();
+
+        return {
+          ...referencia,
+          ultima_auditoria: ultimaAuditoria || null,
+        };
+      }),
+    );
+
+    return referenciasConUltimaAuditoria;
   }
 
   async findOne(id: string) {
     try {
-      return await this.referenciasModel.findById(id);
+      const referencia = await this.referenciasModel.findById(id).select('-__v').lean();
+
+      if (!referencia) {
+        return referencia;
+      }
+
+      const ultimaAuditoria = await this.auditoriaReferenciasModel
+        .findOne({
+          referencia_id: referencia._id,
+          deleted: false,
+        })
+        .sort({ createdAt: -1 })
+        .select('-__v -deleted')
+        .lean();
+
+      return {
+        ...referencia,
+        ultima_auditoria: ultimaAuditoria || null,
+      };
     } catch (error) {
       this.handleExceptions(error);
     }

@@ -1,4 +1,4 @@
-import { IsEnum, IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EstadoAuditoriaDocOperador } from '../entities/estado-auditoria.enum';
 
@@ -31,6 +31,11 @@ export class CreateAuditoriadocsoperadorDto {
   @MaxLength(500)
   @ApiProperty({ required: false, example: 'Documento borroso, por favor cargar nuevamente en alta resolución.' })
   mensaje?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ required: false, example: false, description: 'Indica si el documento fue verificado por el auditor' })
+  verificado?: boolean;
 }
 
 

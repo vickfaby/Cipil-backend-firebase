@@ -1,7 +1,7 @@
 import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateAuditoriadocsvehiculoDto } from './create-auditoriadocsvehiculo.dto';
 import { EstadoAuditoriaDocVehiculo } from '../entities/estado-auditoria-vehiculo.enum';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateAuditoriadocsvehiculoDto extends PartialType(CreateAuditoriadocsvehiculoDto) {
   @ApiPropertyOptional({ enum: EstadoAuditoriaDocVehiculo, example: 'ACEPTADO' })
@@ -12,6 +12,11 @@ export class UpdateAuditoriadocsvehiculoDto extends PartialType(CreateAuditoriad
   @MaxLength(500)
   @ApiPropertyOptional({ example: 'Se aprueba el documento, cumple con requisitos.' })
   mensaje?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ example: true, description: 'Indica si el documento fue verificado por el auditor' })
+  verificado?: boolean;
 }
 
 

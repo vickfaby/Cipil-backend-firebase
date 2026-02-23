@@ -39,6 +39,9 @@ export class Auditoriadocsvehiculo extends Document {
   @Prop()
   mensaje: string;
 
+  @Prop({ default: false })
+  verificado: boolean;
+
   @Prop({ default: true })
   status: boolean;
 
