@@ -14,21 +14,19 @@ RUN npm run build
 # Etapa de runtime
 FROM node:20-bookworm-slim AS runner
 
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
   chromium \
   libnss3 \
   libfreetype6 \
   libharfbuzz0b \
   ca-certificates \
   fonts-freefont-ttf \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
   libvips42 \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  build-essential python3 libvips-dev \
+  build-essential \
+  python3 \
+  libvips-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # Dependencias de sistema para Chromium
