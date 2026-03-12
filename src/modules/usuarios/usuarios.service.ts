@@ -138,6 +138,21 @@ export class UsuariosService {
     }
   }
 
+  async checkDocumentDuplicate(tipodocumento: string, numerodocumento: number): Promise<{ exists: boolean; _id?: string }> {
+    try {
+      if (!Types.ObjectId.isValid(tipodocumento)) {
+        return { exists: false };
+      }
+      const found = await this.usuariosModel
+        .findOne({ tipodocumento: new Types.ObjectId(tipodocumento), numerodocumento })
+        .select('_id');
+      return { exists: !!found, _id: found?._id?.toString() };
+    } catch (error) {
+      console.error('[checkDocumentDuplicate usuarios]', error);
+      return { exists: false };
+    }
+  }
+
   async remove(id: string) {
     const _id = new Types.ObjectId(id);
     const resp = this.usuariosModel.delete({ _id });

@@ -122,6 +122,15 @@ export class UsuariosController {
     return this.usuariosService.debugUsuario(id);
   }
 
+  @Get('check-document/:tipodocumento/:numerodocumento')
+  @ApiOperation({ summary: 'Verificar duplicado de tipo y número de documento en usuarios' })
+  checkDocumentDuplicate(
+    @Param('tipodocumento') tipodocumento: string,
+    @Param('numerodocumento') numerodocumento: string,
+  ) {
+    return this.usuariosService.checkDocumentDuplicate(tipodocumento, Number(numerodocumento));
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener usuario por ID',
