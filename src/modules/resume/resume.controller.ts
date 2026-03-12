@@ -108,6 +108,15 @@ export class ResumeController {
     return this.resumeService.findOneWithLatestAudits(id);
   }
 
+  @Get('/check-document/:tipodocumento/:numerodocumento')
+  @UseGuards(FirebaseAuthGuard)
+  checkDocumentDuplicate(
+    @Param('tipodocumento') tipodocumento: string,
+    @Param('numerodocumento') numerodocumento: string,
+  ) {
+    return this.resumeService.checkDocumentDuplicate(tipodocumento, Number(numerodocumento));
+  }
+
   @Get('/documento/:documento')
   @UseGuards(FirebaseAuthGuard)
   findByDocumento(@Param('documento') documento: string) {

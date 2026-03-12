@@ -612,6 +612,25 @@ export class ResumeService {
     const _id = new Types.ObjectId(id);
     return this.resumeModel.delete({ _id });
   }
+  /**
+   * Verifica si existe un resume con la combinación exacta de tipodocumento + numerodocumento.
+   * Retorna { exists: boolean, _id?: string } para que el frontend pueda comparar en modo edición.
+   */
+  async checkDocumentDuplicate(
+    tipodocumento: string,
+    numerodocumento: number,
+  ): Promise<{ exists: boolean; _id?: string }> {
+    try {
+      const found = await this.resumeModel
+        .findOne({ tipodocumento, numerodocumento, deleted: false })
+        .select('_id');
+      return { exists: !!found, _id: found?._id?.toString() };
+    } catch (error) {
+      this.handleExceptions(error);
+      return { exists: false };
+    }
+  }
+
   async getResumeByDocument(typedoc: string, numdoc: number) {
     try {
       return await this.resumeModel
