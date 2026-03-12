@@ -73,24 +73,41 @@ export class ResumevehiculoController {
   }
 
   @Get('/by-not-user/:user_id')
-  findAllNotByUser(
+  async findAllNotByUser(
     @Param('user_id', ParseMongoIdPipe) userId: string,
     @PaginateV2() pagination: any,
   ) {
-    return this.resumevehiculoService.findAllNotByUser(userId, pagination);
+    const result = await this.resumevehiculoService.findAllNotByUser(
+      userId,
+      pagination,
+    );
+    if (result?.docs && Array.isArray(result.docs)) {
+      result.docs = result.docs.map((d: Record<string, unknown>) => ({
+        ...d,
+        fotos: Array.isArray(d.fotos) ? d.fotos : [],
+      }));
+    }
+    return result;
   }
 
   @Get('/by-not-user/:user_id/search')
-  findAllNotByUserSearch(
+  async findAllNotByUserSearch(
     @Param('user_id', ParseMongoIdPipe) userId: string,
     @PaginateV2() pagination: any,
     @Query('text') text: string,
   ) {
-    return this.resumevehiculoService.findAllNotByUserWithSearch(
+    const result = await this.resumevehiculoService.findAllNotByUserWithSearch(
       userId,
       text,
       pagination,
     );
+    if (result?.docs && Array.isArray(result.docs)) {
+      result.docs = result.docs.map((d: Record<string, unknown>) => ({
+        ...d,
+        fotos: Array.isArray(d.fotos) ? d.fotos : [],
+      }));
+    }
+    return result;
   }
 
   @Get('/usuario/:userId')

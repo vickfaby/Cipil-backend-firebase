@@ -35,7 +35,6 @@ import { Auditoriadocumentosenganche } from '../auditoriadocumentosenganche/enti
 
 @Injectable()
 export class ResumevehiculoService {
- 
   constructor(
     @InjectModel(Resumevehiculo.name)
     private readonly resumevehiculoModel: ModelExt<Resumevehiculo>,
@@ -66,8 +65,12 @@ export class ResumevehiculoService {
         createResumevehiculoDto.clasevehiculo_id,
       );
       const isArticulado =
-        (clasevehiculo as any)?.nombre_clasesvehiculos?.toUpperCase() === 'ARTICULADO';
-      console.log('Clase vehiculo found (create):', (clasevehiculo as any)?.nombre_clasesvehiculos);
+        (clasevehiculo as any)?.nombre_clasesvehiculos?.toUpperCase() ===
+        'ARTICULADO';
+      console.log(
+        'Clase vehiculo found (create):',
+        (clasevehiculo as any)?.nombre_clasesvehiculos,
+      );
       console.log('Is Articulado (create):', isArticulado);
 
       for (const eng of enganchesList) {
@@ -141,9 +144,18 @@ export class ResumevehiculoService {
           { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-          { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-          { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-          { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+          {
+            path: 'tenedor_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
+          {
+            path: 'propietario_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
+          {
+            path: 'operador_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
           {
             path: 'documentosenganche',
             select:
@@ -162,7 +174,9 @@ export class ResumevehiculoService {
     const docsWithPosAndAudits = await Promise.all(
       (docsWithPos as any[]).map(async (vehiculo: any) => {
         const vehiculoObj =
-          typeof vehiculo?.toObject === 'function' ? vehiculo.toObject() : vehiculo;
+          typeof vehiculo?.toObject === 'function'
+            ? vehiculo.toObject()
+            : vehiculo;
         const documentosEnganche = Array.isArray(vehiculoObj.documentosenganche)
           ? vehiculoObj.documentosenganche
           : [];
@@ -216,7 +230,7 @@ export class ResumevehiculoService {
     try {
       const filter = { user_id: { $ne: userId } };
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -229,9 +243,18 @@ export class ResumevehiculoService {
             { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-            { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'tenedor_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'propietario_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'operador_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
             {
               path: 'user_id',
               select: 'nombre correo foto _id roles_id',
@@ -265,9 +288,13 @@ export class ResumevehiculoService {
       );
 
       const docsWithPos = await this._attachLastPosition(transformedDocs);
+      const docsWithFotos = (docsWithPos as any[]).map((d) => ({
+        ...d,
+        fotos: Array.isArray((d as any).fotos) ? (d as any).fotos : [],
+      }));
 
       return {
-        docs: docsWithPos,
+        docs: docsWithFotos,
         totalDocs,
         limit,
         totalPages,
@@ -296,7 +323,7 @@ export class ResumevehiculoService {
         : baseFilter;
 
       const summarySelect =
-        'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -309,9 +336,18 @@ export class ResumevehiculoService {
             { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-            { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'tenedor_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'propietario_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'operador_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
             {
               path: 'user_id',
               select: 'nombre correo foto _id roles_id',
@@ -345,9 +381,13 @@ export class ResumevehiculoService {
       );
 
       const docsWithPos = await this._attachLastPosition(transformedDocs);
+      const docsWithFotos = (docsWithPos as any[]).map((d) => ({
+        ...d,
+        fotos: Array.isArray((d as any).fotos) ? (d as any).fotos : [],
+      }));
 
       return {
-        docs: docsWithPos,
+        docs: docsWithFotos,
         totalDocs,
         limit,
         totalPages,
@@ -381,9 +421,18 @@ export class ResumevehiculoService {
           { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
           { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-          { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-          { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-          { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+          {
+            path: 'tenedor_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
+          {
+            path: 'propietario_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
+          {
+            path: 'operador_liga_id',
+            select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+          },
         ])
         .lean();
 
@@ -392,7 +441,10 @@ export class ResumevehiculoService {
       }
 
       // Para cada documento, obtener la auditoría más reciente
-      if (resumevehiculo.documentosvehiculo && resumevehiculo.documentosvehiculo.length > 0) {
+      if (
+        resumevehiculo.documentosvehiculo &&
+        resumevehiculo.documentosvehiculo.length > 0
+      ) {
         const documentosConAuditoria = await Promise.all(
           resumevehiculo.documentosvehiculo.map(async (documento: any) => {
             // Buscar la auditoría más reciente para este documento
@@ -454,13 +506,18 @@ export class ResumevehiculoService {
 
       // Enriquecer placas_enganche con datos del enganche y solo los documentos que pertenecen a este vehículo.
       const resumevehiculoObj = resumevehiculo as any;
-      const documentosEngancheDelVehiculo = Array.isArray(resumevehiculoObj.documentosenganche)
+      const documentosEngancheDelVehiculo = Array.isArray(
+        resumevehiculoObj.documentosenganche,
+      )
         ? resumevehiculoObj.documentosenganche
         : [];
 
       // Obtener placas de enganche (puede ser string o array)
       let placasEnganche: string[] = [];
-      if (resumevehiculoObj.placas_enganche && Array.isArray(resumevehiculoObj.placas_enganche)) {
+      if (
+        resumevehiculoObj.placas_enganche &&
+        Array.isArray(resumevehiculoObj.placas_enganche)
+      ) {
         placasEnganche = resumevehiculoObj.placas_enganche;
       } else if (resumevehiculoObj.placa_enganche) {
         placasEnganche = [resumevehiculoObj.placa_enganche];
@@ -502,16 +559,20 @@ export class ResumevehiculoService {
           }),
         );
 
-        resumevehiculoObj.placas_enganche = enganchesCompletos.filter((e) => e !== null);
+        resumevehiculoObj.placas_enganche = enganchesCompletos.filter(
+          (e) => e !== null,
+        );
       } else {
         resumevehiculoObj.placas_enganche = [];
       }
-      
+
       // Eliminar dataenganches y enganches si existen
       delete resumevehiculoObj.dataenganches;
       delete resumevehiculoObj.enganches;
 
-      const [resumeWithPos] = await this._attachLastPosition([resumevehiculoObj]);
+      const [resumeWithPos] = await this._attachLastPosition([
+        resumevehiculoObj,
+      ]);
       return resumeWithPos as any;
     } catch (error) {
       this.handleExceptions(error);
@@ -536,9 +597,18 @@ export class ResumevehiculoService {
             { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-            { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'tenedor_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'propietario_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'operador_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
           ])
           .sort({ createdAt: -1 })
           .skip(skip)
@@ -570,11 +640,7 @@ export class ResumevehiculoService {
     }
   }
 
-  async findByUserWithSearch(
-    userId: string,
-    text: string,
-    pagination: any,
-  ) {
+  async findByUserWithSearch(userId: string, text: string, pagination: any) {
     try {
       const baseFilter = { user_id: userId };
       const trimmedText = (text || '').trim();
@@ -596,9 +662,18 @@ export class ResumevehiculoService {
             { path: 'tipo_doc_propietario_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_tenedor_id', select: 'nombre_tipodocumento' },
             { path: 'tipo_doc_operador_id', select: 'nombre_tipodocumento' },
-            { path: 'tenedor_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'propietario_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
-            { path: 'operador_liga_id', select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion' },
+            {
+              path: 'tenedor_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'propietario_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
+            {
+              path: 'operador_liga_id',
+              select: 'usuario_a_ligar_id correo_a_ligar estado_invitacion',
+            },
           ])
           .sort({ createdAt: -1 })
           .skip(skip)
@@ -663,41 +738,54 @@ export class ResumevehiculoService {
     const resumevehiculo = await this.resumevehiculoModel
       .findById(id)
       .populate('clasevehiculo_id');
-    
+
     if (!resumevehiculo) {
       throw new BadRequestException('Vehículo no encontrado');
     }
-    
+
     try {
       console.log('=== UPDATE SERVICE ===');
       console.log('Vehículo ID:', id);
       console.log('User ID:', updateResumevehiculoDto.user_id);
-      console.log('Documentos vehiculo originales:', updateResumevehiculoDto?.documentosvehiculo?.length || 0);
-      
+      console.log(
+        'Documentos vehiculo originales:',
+        updateResumevehiculoDto?.documentosvehiculo?.length || 0,
+      );
+
       //TODO: create methods for insert into other modules
       // Añadir el resumevehicle_id y user_id a cada documento antes de guardar
-      const documentosVehiculoConId:any = updateResumevehiculoDto?.documentosvehiculo?.map(doc => ({
-        ...doc,
-        resumevehicle_id: id,
-        user_id: updateResumevehiculoDto.user_id || doc.user_id,
-      }));
-      
-      console.log('Documentos con ID añadido:', documentosVehiculoConId?.length || 0);
+      const documentosVehiculoConId: any =
+        updateResumevehiculoDto?.documentosvehiculo?.map((doc) => ({
+          ...doc,
+          resumevehicle_id: id,
+          user_id: updateResumevehiculoDto.user_id || doc.user_id,
+        }));
+
+      console.log(
+        'Documentos con ID añadido:',
+        documentosVehiculoConId?.length || 0,
+      );
       if (documentosVehiculoConId && documentosVehiculoConId.length > 0) {
         documentosVehiculoConId.forEach((doc, index) => {
-          console.log(`Doc ${index}: _id=${doc._id || 'NUEVO'}, resumevehicle_id=${doc.resumevehicle_id}`);
+          console.log(
+            `Doc ${index}: _id=${doc._id || 'NUEVO'}, resumevehicle_id=${doc.resumevehicle_id}`,
+          );
         });
       }
-      
+
       const respDocumentoscargadosresumevehicle =
         await this.documentoscargadosresumevehicluloService.updateManyDocumentoscargadosresume(
           documentosVehiculoConId,
         );
-      
-      console.log('IDs de documentos guardados:', respDocumentoscargadosresumevehicle);
+
+      console.log(
+        'IDs de documentos guardados:',
+        respDocumentoscargadosresumevehicle,
+      );
 
       // When user sends documentosenganche: [] we replace with empty; never pass undefined.
-      const documentosenganchePayload = updateResumevehiculoDto.documentosenganche ?? [];
+      const documentosenganchePayload =
+        updateResumevehiculoDto.documentosenganche ?? [];
       const documentosEngancheConId = Array.isArray(documentosenganchePayload)
         ? documentosenganchePayload.map((doc: any) => ({
             ...doc,
@@ -715,13 +803,14 @@ export class ResumevehiculoService {
       console.log('Enganches received:', enganchesList.length);
       if (enganchesList.length > 0) {
         const clasevehiculoIdRaw =
-          updateResumevehiculoDto.clasevehiculo_id ?? resumevehiculo.clasevehiculo_id;
+          updateResumevehiculoDto.clasevehiculo_id ??
+          resumevehiculo.clasevehiculo_id;
         const clasevehiculoId =
           typeof clasevehiculoIdRaw === 'string'
             ? clasevehiculoIdRaw
-            : (clasevehiculoIdRaw as any)?._id?.toString?.() ??
+            : ((clasevehiculoIdRaw as any)?._id?.toString?.() ??
               (clasevehiculoIdRaw as any)?.toString?.() ??
-              '';
+              '');
         console.log('Clasevehiculo ID raw (update):', clasevehiculoIdRaw);
         console.log('Clasevehiculo ID resolved (update):', clasevehiculoId);
 
@@ -735,7 +824,8 @@ export class ResumevehiculoService {
 
         let nombreClasevehiculo: string | undefined = populatedNombre;
         if (!nombreClasevehiculo && clasevehiculoId) {
-          const clasevehiculo = await this.clasesvehiculoService.findOne(clasevehiculoId);
+          const clasevehiculo =
+            await this.clasesvehiculoService.findOne(clasevehiculoId);
           nombreClasevehiculo = (clasevehiculo as any)?.nombre_clasesvehiculos;
         }
 
@@ -743,15 +833,15 @@ export class ResumevehiculoService {
           nombreClasevehiculo?.toUpperCase() === 'ARTICULADO';
         console.log('Clase vehiculo found (update):', nombreClasevehiculo);
         console.log('Is Articulado (update):', isArticulado);
-        
+
         const userIdRaw =
           updateResumevehiculoDto.user_id ?? (resumevehiculo as any).user_id;
         const userId =
           typeof userIdRaw === 'string'
             ? userIdRaw
-            : (userIdRaw as any)?._id?.toString?.() ??
+            : ((userIdRaw as any)?._id?.toString?.() ??
               (userIdRaw as any)?.toString?.() ??
-              '';
+              '');
         for (const eng of enganchesList) {
           if (!isArticulado) continue;
           const engancheData: CreatePlacaenganchesDto = {
@@ -782,7 +872,9 @@ export class ResumevehiculoService {
           );
           if (engancheExistente && engancheExistente.length > 0) {
             const enganche = engancheExistente[0] as any;
-            const engancheId = enganche._id ? String(enganche._id) : enganche.id;
+            const engancheId = enganche._id
+              ? String(enganche._id)
+              : enganche.id;
             await this.placaenganchesModel.update(engancheId, engancheData);
           } else {
             await this.placaenganchesModel.create(engancheData);
@@ -824,8 +916,10 @@ export class ResumevehiculoService {
         progreso: updateResumevehiculoDto.progreso,
         user_id: updateResumevehiculoDto.user_id,
         status: updateResumevehiculoDto.status,
-        tipo_doc_propietario_id: updateResumevehiculoDto.tipo_doc_propietario_id,
-        num_documento_propietario: updateResumevehiculoDto.num_documento_propietario,
+        tipo_doc_propietario_id:
+          updateResumevehiculoDto.tipo_doc_propietario_id,
+        num_documento_propietario:
+          updateResumevehiculoDto.num_documento_propietario,
         email_propietario: updateResumevehiculoDto.email_propietario,
         tipo_doc_tenedor_id: updateResumevehiculoDto.tipo_doc_tenedor_id,
         num_documento_tenedor: updateResumevehiculoDto.num_documento_tenedor,
@@ -838,7 +932,12 @@ export class ResumevehiculoService {
         operador_liga_id: updateResumevehiculoDto.operador_liga_id,
       };
       // When payload has documentosenganche (including []), persist it so "delete all" works.
-      if (Object.prototype.hasOwnProperty.call(updateResumevehiculoDto, 'documentosenganche')) {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          updateResumevehiculoDto,
+          'documentosenganche',
+        )
+      ) {
         data.documentosenganche = Array.isArray(respDocumentoscargadosenganche)
           ? respDocumentoscargadosenganche
           : [];
@@ -852,31 +951,40 @@ export class ResumevehiculoService {
         // If the vehicle is NOT Articulado, we currently skip adding them to placasEngancheUpdate.
         // So data.placas_enganche remains undefined, so DB is not updated.
         // This is correct behavior for non-Articulado (ignore enganches).
-        
+
         // However, if the user sent an empty array `enganches: []`, we want to clear them.
-        if (updateResumevehiculoDto.enganches !== undefined && Array.isArray(updateResumevehiculoDto.enganches)) {
-           // If array is empty, clear DB field.
-           if (updateResumevehiculoDto.enganches.length === 0) {
-             data.placas_enganche = [];
-           }
-           // If array had items but they were all filtered out (not Articulado), 
-           // we also don't update data.placas_enganche, so it stays as is.
+        if (
+          updateResumevehiculoDto.enganches !== undefined &&
+          Array.isArray(updateResumevehiculoDto.enganches)
+        ) {
+          // If array is empty, clear DB field.
+          if (updateResumevehiculoDto.enganches.length === 0) {
+            data.placas_enganche = [];
+          }
+          // If array had items but they were all filtered out (not Articulado),
+          // we also don't update data.placas_enganche, so it stays as is.
         }
       }
 
       // Actualizar el documento en la base de datos
       console.log('Actualizando documento en BD...');
-      const updateResult = await this.resumevehiculoModel.updateOne({ _id: id }, data);
+      const updateResult = await this.resumevehiculoModel.updateOne(
+        { _id: id },
+        data,
+      );
       console.log('Resultado del updateOne:', updateResult);
-      
+
       // Devolver el documento actualizado con populate para incluir los documentos
       console.log('Buscando documento actualizado...');
       const updatedDoc = await this.findOne(id);
       console.log('Documento encontrado:', updatedDoc ? 'SI' : 'NO');
       if (updatedDoc && updatedDoc.documentosvehiculo) {
-        console.log('Total documentos en respuesta:', updatedDoc.documentosvehiculo.length);
+        console.log(
+          'Total documentos en respuesta:',
+          updatedDoc.documentosvehiculo.length,
+        );
       }
-      
+
       return updatedDoc;
     } catch (error) {
       console.error('Error en update service:', error);
@@ -905,11 +1013,11 @@ export class ResumevehiculoService {
     typehead,
   }: GetResumeVehiculoPDFDto) {
     const datvehiculo = await this.findOne(numdoc);
-    
+
     if (!datvehiculo) {
       throw new BadRequestException('Vehículo no encontrado');
     }
-    
+
     const vehiculoId = datvehiculo?._id?.toString() || '';
     const docvehiculo =
       await this.documentoscargadosresumevehicluloService.findByResumeVehicle(
