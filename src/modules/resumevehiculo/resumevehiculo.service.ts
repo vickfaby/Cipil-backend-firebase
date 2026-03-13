@@ -131,7 +131,7 @@ export class ResumevehiculoService {
   }
   async findAll(pagination: any) {
     const summarySelect =
-      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche documentosenganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+      'placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche documentosenganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario nombre_propietario apellido_propietario telefono_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor nombre_tenedor apellido_tenedor telefono_tenedor email_tenedor tipo_doc_operador_id num_documento_operador nombre_operador apellido_operador telefono_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
     const limit = Number(pagination?.limit) || 10;
     const page = Number(pagination?.page) || 1;
     const skip = (page - 1) * limit;
@@ -230,7 +230,7 @@ export class ResumevehiculoService {
     try {
       const filter = { user_id: { $ne: userId } };
       const summarySelect =
-        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario nombre_propietario apellido_propietario telefono_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor nombre_tenedor apellido_tenedor telefono_tenedor email_tenedor tipo_doc_operador_id num_documento_operador nombre_operador apellido_operador telefono_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -323,7 +323,7 @@ export class ResumevehiculoService {
         : baseFilter;
 
       const summarySelect =
-        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario nombre_propietario apellido_propietario telefono_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor nombre_tenedor apellido_tenedor telefono_tenedor email_tenedor tipo_doc_operador_id num_documento_operador nombre_operador apellido_operador telefono_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -438,6 +438,19 @@ export class ResumevehiculoService {
 
       if (!resumevehiculo) {
         return null;
+      }
+
+      // Garantizar que los campos de ingreso manual siempre estén presentes
+      // (documentos anteriores a la adición de estos campos no los tienen en MongoDB)
+      const roleDefaults: Record<string, null> = {
+        nombre_propietario: null, apellido_propietario: null, telefono_propietario: null,
+        nombre_tenedor: null,     apellido_tenedor: null,     telefono_tenedor: null,
+        nombre_operador: null,    apellido_operador: null,    telefono_operador: null,
+      };
+      for (const [key, val] of Object.entries(roleDefaults)) {
+        if ((resumevehiculo as any)[key] === undefined) {
+          (resumevehiculo as any)[key] = val;
+        }
       }
 
       // Para cada documento, obtener la auditoría más reciente
@@ -583,7 +596,7 @@ export class ResumevehiculoService {
   async findByUser(userId: string, pagination: any) {
     try {
       const summarySelect =
-        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario nombre_propietario apellido_propietario telefono_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor nombre_tenedor apellido_tenedor telefono_tenedor email_tenedor tipo_doc_operador_id num_documento_operador nombre_operador apellido_operador telefono_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const filter = { user_id: userId };
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
@@ -649,7 +662,7 @@ export class ResumevehiculoService {
         : baseFilter;
 
       const summarySelect =
-        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor email_tenedor tipo_doc_operador_id num_documento_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
+        'fotos placa modelo tipovehiculo_id marca_id ano_id modelo_id color_id tipocarroceria_id clasevehiculo_id propietario_id tenedor_id operador_id tipo_servicio empresagps_id ubicacion calificacion ruta_frecuente placas_enganche progreso user_id status disponible tipo_doc_propietario_id num_documento_propietario nombre_propietario apellido_propietario telefono_propietario email_propietario tipo_doc_tenedor_id num_documento_tenedor nombre_tenedor apellido_tenedor telefono_tenedor email_tenedor tipo_doc_operador_id num_documento_operador nombre_operador apellido_operador telefono_operador email_operador tenedor_liga_id propietario_liga_id operador_liga_id';
       const limit = Number(pagination?.limit) || 10;
       const page = Number(pagination?.page) || 1;
       const skip = (page - 1) * limit;
@@ -920,12 +933,21 @@ export class ResumevehiculoService {
           updateResumevehiculoDto.tipo_doc_propietario_id,
         num_documento_propietario:
           updateResumevehiculoDto.num_documento_propietario,
+        nombre_propietario: updateResumevehiculoDto.nombre_propietario,
+        apellido_propietario: updateResumevehiculoDto.apellido_propietario,
+        telefono_propietario: updateResumevehiculoDto.telefono_propietario,
         email_propietario: updateResumevehiculoDto.email_propietario,
         tipo_doc_tenedor_id: updateResumevehiculoDto.tipo_doc_tenedor_id,
         num_documento_tenedor: updateResumevehiculoDto.num_documento_tenedor,
+        nombre_tenedor: updateResumevehiculoDto.nombre_tenedor,
+        apellido_tenedor: updateResumevehiculoDto.apellido_tenedor,
+        telefono_tenedor: updateResumevehiculoDto.telefono_tenedor,
         email_tenedor: updateResumevehiculoDto.email_tenedor,
         tipo_doc_operador_id: updateResumevehiculoDto.tipo_doc_operador_id,
         num_documento_operador: updateResumevehiculoDto.num_documento_operador,
+        nombre_operador: updateResumevehiculoDto.nombre_operador,
+        apellido_operador: updateResumevehiculoDto.apellido_operador,
+        telefono_operador: updateResumevehiculoDto.telefono_operador,
         email_operador: updateResumevehiculoDto.email_operador,
         tenedor_liga_id: updateResumevehiculoDto.tenedor_liga_id,
         propietario_liga_id: updateResumevehiculoDto.propietario_liga_id,

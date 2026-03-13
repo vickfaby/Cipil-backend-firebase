@@ -209,6 +209,15 @@ export class Resumevehiculo extends Document {
   num_documento_propietario: string;
 
   @Prop()
+  nombre_propietario: string;
+
+  @Prop()
+  apellido_propietario: string;
+
+  @Prop()
+  telefono_propietario: string;
+
+  @Prop()
   email_propietario: string;
 
   @Prop({
@@ -222,6 +231,15 @@ export class Resumevehiculo extends Document {
   num_documento_tenedor: string;
 
   @Prop()
+  nombre_tenedor: string;
+
+  @Prop()
+  apellido_tenedor: string;
+
+  @Prop()
+  telefono_tenedor: string;
+
+  @Prop()
   email_tenedor: string;
 
   @Prop({
@@ -233,6 +251,15 @@ export class Resumevehiculo extends Document {
 
   @Prop()
   num_documento_operador: string;
+
+  @Prop()
+  nombre_operador: string;
+
+  @Prop()
+  apellido_operador: string;
+
+  @Prop()
+  telefono_operador: string;
 
   @Prop()
   email_operador: string;

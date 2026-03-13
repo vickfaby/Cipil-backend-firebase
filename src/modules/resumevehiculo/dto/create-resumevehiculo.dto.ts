@@ -394,6 +394,21 @@ export class CreateResumevehiculoDto {
   @IsOptional()
   @IsString()
   @ApiProperty()
+  nombre_propietario?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  apellido_propietario?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  telefono_propietario?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
   email_propietario?: string;
 
   @IsOptional()
@@ -409,6 +424,21 @@ export class CreateResumevehiculoDto {
   @IsOptional()
   @IsString()
   @ApiProperty()
+  nombre_tenedor?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  apellido_tenedor?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  telefono_tenedor?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
   email_tenedor?: string;
 
   @IsOptional()
@@ -420,6 +450,21 @@ export class CreateResumevehiculoDto {
   @IsString()
   @ApiProperty()
   num_documento_operador?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  nombre_operador?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  apellido_operador?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  telefono_operador?: string;
 
   @IsOptional()
   @IsString()
