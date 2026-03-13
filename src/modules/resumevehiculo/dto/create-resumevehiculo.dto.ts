@@ -6,6 +6,8 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -19,9 +21,15 @@ export class CreateEngancheDto {
   marca_id: string;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty({ description: 'Modelo del enganche' })
-  modelo: string;
+  @IsOptional()
+  @ApiProperty({ description: 'Línea del enganche', required: false })
+  linea?: string;
+
+  @IsNumber()
+  @Min(1900)
+  @Max(2100)
+  @ApiProperty({ description: 'Año modelo del enganche, ej: 2020' })
+  modelo: number;
 
   @IsString()
   @MinLength(1)
@@ -150,8 +158,8 @@ export class CreateResumevehiculoDto {
   modelo_id: string;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
+  @IsOptional()
+  @ApiProperty({ required: false })
   modelo: string;
 
   @IsOptional()

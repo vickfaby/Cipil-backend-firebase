@@ -77,6 +77,7 @@ export class ResumevehiculoService {
         if (!isArticulado) continue;
         const engancheData: CreatePlacaenganchesDto = {
           marca_id: eng.marca_id,
+          linea: eng.linea,
           modelo: eng.modelo,
           numero_serie: eng.numero_serie,
           color_id: eng.color_id,
@@ -554,6 +555,7 @@ export class ResumevehiculoService {
                 configuracionvehicular: engancheData.configuracionvehicular,
                 foto: engancheData.foto || '',
                 marca_id: engancheData.marca_id,
+                linea: engancheData.linea || '',
                 modelo: engancheData.modelo,
                 numero_serie: engancheData.numero_serie,
                 numero_plaqueta: engancheData.numero_plaqueta || '',
@@ -859,6 +861,7 @@ export class ResumevehiculoService {
           if (!isArticulado) continue;
           const engancheData: CreatePlacaenganchesDto = {
             marca_id: eng.marca_id,
+            linea: eng.linea,
             modelo: eng.modelo,
             numero_serie: eng.numero_serie,
             color_id: eng.color_id,

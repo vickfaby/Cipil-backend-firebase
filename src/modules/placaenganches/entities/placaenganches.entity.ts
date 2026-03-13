@@ -30,7 +30,10 @@ export class Placaenganches extends Document {
   marca_id: Marcaenganches;
 
   @Prop()
-  modelo: string;
+  linea: string;
+
+  @Prop()
+  modelo: number;
 
   @Prop()
   numero_serie: string;

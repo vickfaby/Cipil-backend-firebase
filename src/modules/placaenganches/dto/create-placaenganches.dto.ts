@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
 
 export class CreatePlacaenganchesDto {
   @IsNumber()
@@ -26,9 +26,15 @@ export class CreatePlacaenganchesDto {
   marca_id: string;
 
   @IsString()
-  @MinLength(1)
-  @ApiProperty()
-  modelo: string;
+  @IsOptional()
+  @ApiProperty({ required: false })
+  linea?: string;
+
+  @IsNumber()
+  @Min(1900)
+  @Max(2100)
+  @ApiProperty({ description: 'Año modelo del enganche, ej: 2020' })
+  modelo: number;
 
   @IsString()
   @MinLength(1)
