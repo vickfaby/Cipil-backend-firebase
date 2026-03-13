@@ -131,6 +131,13 @@ export class ResumevehiculoController {
     );
   }
 
+  @Get('check-placa/:placa')
+  @ApiOperation({ summary: 'Verificar si ya existe un vehículo con la placa indicada' })
+  @ApiParam({ name: 'placa', description: 'Placa del vehículo a verificar', example: 'ABC123' })
+  checkPlaca(@Param('placa') placa: string) {
+    return this.resumevehiculoService.checkPlacaExists(placa);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseMongoIdPipe) id: string) {
     return this.resumevehiculoService.findOne(id);

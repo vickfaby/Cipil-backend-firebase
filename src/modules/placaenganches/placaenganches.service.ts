@@ -42,6 +42,14 @@ export class PlacaenganchesService {
     }
   }
 
+  async checkPlacaExists(placa: string): Promise<{ exists: boolean }> {
+    const found = await this.placaenganchesModel
+      .findOne({ placa: placa.toUpperCase().trim() })
+      .select('_id')
+      .lean();
+    return { exists: !!found };
+  }
+
   async findByPlaca(placa: string) {
     try {
       return await this.placaenganchesModel.find({ placa: placa });

@@ -1204,6 +1204,14 @@ export class ResumevehiculoService {
     return pdf;
   }
 
+  async checkPlacaExists(placa: string): Promise<{ exists: boolean }> {
+    const found = await this.resumevehiculoModel
+      .findOne({ placa: placa.toUpperCase().trim() })
+      .select('_id')
+      .lean();
+    return { exists: !!found };
+  }
+
   private handleExceptions(error: any) {
     if (error.code === 11000) {
       throw new BadRequestException(

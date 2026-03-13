@@ -37,13 +37,19 @@ export class PlacaenganchesController {
     return this.placaenganchesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseMongoIdPipe) id: string) {
-    return this.placaenganchesService.findOne(id);
+  @Get('check-placa/:placa')
+  checkPlaca(@Param('placa') placa: string) {
+    return this.placaenganchesService.checkPlacaExists(placa);
   }
+
   @Get('/placa/:placa')
   findByPlaca(@Param('placa') placa: string) {
     return this.placaenganchesService.findByPlaca(placa);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseMongoIdPipe) id: string) {
+    return this.placaenganchesService.findOne(id);
   }
 
   @Patch(':id')
